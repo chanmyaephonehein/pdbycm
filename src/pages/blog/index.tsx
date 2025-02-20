@@ -1,5 +1,15 @@
+"use client";
+
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
+
+// Function to create a slug from the title
+const generateSlug = (title: string) =>
+  title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 
 const blogCategories = [
   {
@@ -76,6 +86,8 @@ const blogCategories = [
 ];
 
 export default function Blog() {
+  const router = useRouter();
+
   return (
     <div className="container mx-auto px-6 py-12">
       <h2 className="text-3xl font-semibold text-center mb-12">
@@ -89,25 +101,35 @@ export default function Blog() {
 
           {/* Blog Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {category.blogs.map((blog, idx) => (
-              <div
-                key={idx}
-                className="border rounded-lg p-4 shadow-md text-center"
-              >
-                <div className="w-full h-40  flex items-center justify-center mb-4">
-                  <Image
-                    src={blog.image}
-                    alt={blog.title}
-                    width={300}
-                    height={200}
-                    className="object-cover rounded-md"
-                  />
+            {category.blogs.map((blog, idx) => {
+              const slug = generateSlug(blog.title); // Convert title to slug
+              return (
+                <div
+                  key={idx}
+                  className="border rounded-lg p-4 shadow-md text-center"
+                >
+                  <div className="w-full h-40 flex items-center justify-center mb-4">
+                    <Image
+                      src={blog.image}
+                      alt={blog.title}
+                      width={300}
+                      height={200}
+                      className="object-cover rounded-md"
+                    />
+                  </div>
+                  <h4 className="text-lg font-semibold">{blog.title}</h4>
+                  <p className="text-sm text-gray-600 mt-2">
+                    {blog.description}
+                  </p>
+                  <Button
+                    className="mt-4"
+                    onClick={() => router.push(`/blog/${slug}`)}
+                  >
+                    Read
+                  </Button>
                 </div>
-                <h4 className="text-lg font-semibold">{blog.title}</h4>
-                <p className="text-sm text-gray-600 mt-2">{blog.description}</p>
-                <Button className="mt-4">Read</Button>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       ))}

@@ -1,4 +1,7 @@
+"use client";
+
 import React from "react";
+import { useRouter } from "next/navigation";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,28 +24,58 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const Navigation = () => {
+  const router = useRouter();
+
   const menuItems = {
     solutions: [
-      "All Solutions",
-      "AI-Powered Virtual Assistants & Chatbots",
-      "AI-Driven Automation & Process Optimization",
-      "Predictive Analytics & Business Intelligence",
-      "AI-Based Prototyping & Product Development",
-      "AI for Cybersecurity & Risk Management",
-      "AI-Powered Personalization & Customer Experience",
+      { name: "All Solutions", route: "/solutions" },
+      {
+        name: "AI-Powered Virtual Assistants & Chatbots",
+        route: "/solutions/ai-chatbots",
+      },
+      {
+        name: "AI-Driven Automation & Process Optimization",
+        route: "/solutions/ai-automation",
+      },
+      {
+        name: "Predictive Analytics & Business Intelligence",
+        route: "/solutions/predictive-analytics",
+      },
+      {
+        name: "AI-Based Prototyping & Product Development",
+        route: "/solutions/ai-prototyping",
+      },
+      {
+        name: "AI for Cybersecurity & Risk Management",
+        route: "/solutions/ai-cybersecurity",
+      },
+      {
+        name: "AI-Powered Personalization & Customer Experience",
+        route: "/solutions/ai-personalization",
+      },
     ],
     industries: [
-      "All Industries",
-      "Banking & Finance",
-      "Retail & Ecommerce",
-      "Healthcare & Life Sciences",
-      "IT & Software Development",
-      "Manufacturing & Engineering",
-      "Human Resources & Workforce Management",
+      { name: "All Industries", route: "/industries" },
+      { name: "Banking & Finance", route: "/industries/banking-finance" },
+      { name: "Retail & Ecommerce", route: "/industries/retail-ecommerce" },
+      { name: "Healthcare & Life Sciences", route: "/industries/healthcare" },
+      { name: "IT & Software Development", route: "/industries/it-software" },
+      {
+        name: "Manufacturing & Engineering",
+        route: "/industries/manufacturing",
+      },
+      {
+        name: "Human Resources & Workforce Management",
+        route: "/industries/human-resources",
+      },
     ],
-    vlog: ["Blog", "Gallery"],
+    vlog: [
+      { name: "Blog", route: "/blog" },
+      { name: "Gallery", route: "/gallery" },
+    ],
   };
 
   return (
@@ -50,22 +83,38 @@ const Navigation = () => {
       {/* Desktop Navigation */}
       <nav className="hidden lg:flex items-center justify-between w-full px-6 py-4 container mx-auto">
         {/* Logo */}
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full border"></div>{" "}
+        <div
+          className="flex items-center gap-3 cursor-pointer"
+          onClick={() => router.push("/")}
+        >
+          <Avatar className="w-10 h-10">
+            <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
+            <AvatarFallback>CN</AvatarFallback>
+          </Avatar>
           {/* Logo Placeholder */}
           <span className="font-semibold text-xl">AI-Solution</span>
         </div>
 
         {/* Menu */}
-        <Menubar className="flex gap-6">
+        <Menubar className="flex gap-6 cru">
           <MenubarMenu>
-            <MenubarTrigger className="font-medium">Home</MenubarTrigger>
+            <MenubarTrigger
+              className="font-medium"
+              onClick={() => router.push("/")}
+            >
+              Home
+            </MenubarTrigger>
           </MenubarMenu>
           <MenubarMenu>
             <MenubarTrigger className="font-medium">Solutions</MenubarTrigger>
             <MenubarContent className="min-w-[320px]">
               {menuItems.solutions.map((item) => (
-                <MenubarItem key={item}>{item}</MenubarItem>
+                <MenubarItem
+                  key={item.name}
+                  onClick={() => router.push(item.route)}
+                >
+                  {item.name}
+                </MenubarItem>
               ))}
             </MenubarContent>
           </MenubarMenu>
@@ -73,7 +122,12 @@ const Navigation = () => {
             <MenubarTrigger className="font-medium">Industries</MenubarTrigger>
             <MenubarContent className="min-w-[280px]">
               {menuItems.industries.map((item) => (
-                <MenubarItem key={item}>{item}</MenubarItem>
+                <MenubarItem
+                  key={item.name}
+                  onClick={() => router.push(item.route)}
+                >
+                  {item.name}
+                </MenubarItem>
               ))}
             </MenubarContent>
           </MenubarMenu>
@@ -81,7 +135,12 @@ const Navigation = () => {
             <MenubarTrigger className="font-medium">Vlog</MenubarTrigger>
             <MenubarContent>
               {menuItems.vlog.map((item) => (
-                <MenubarItem key={item}>{item}</MenubarItem>
+                <MenubarItem
+                  key={item.name}
+                  onClick={() => router.push(item.route)}
+                >
+                  {item.name}
+                </MenubarItem>
               ))}
             </MenubarContent>
           </MenubarMenu>
@@ -89,8 +148,15 @@ const Navigation = () => {
 
         {/* Right Section */}
         <div className="flex items-center gap-4">
-          <span className="font-medium text-gray-600">Feedback</span>
-          <Button variant="outline">Contact Us</Button>
+          <span
+            className="font-medium text-gray-600 cursor-pointer"
+            onClick={() => router.push("/feedbacks")}
+          >
+            Feedbacks
+          </span>
+          <Button variant="outline" onClick={() => router.push("/contactus")}>
+            Contact Us
+          </Button>
         </div>
       </nav>
 
@@ -98,7 +164,10 @@ const Navigation = () => {
       <nav className="flex lg:hidden items-center justify-between w-full px-6 py-4 container mx-auto">
         {/* Logo */}
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full border"></div>{" "}
+          <Avatar className="w-8 h-8">
+            <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
+            <AvatarFallback>CN</AvatarFallback>
+          </Avatar>{" "}
           {/* Logo Placeholder */}
           <span className="font-semibold text-lg">AI-Solution</span>
         </div>
@@ -115,7 +184,11 @@ const Navigation = () => {
               <SheetTitle>Menu</SheetTitle>
             </SheetHeader>
             <div className="flex flex-col gap-4 mt-4">
-              <Button variant="ghost" className="justify-start">
+              <Button
+                variant="ghost"
+                className="justify-start"
+                onClick={() => router.push("/")}
+              >
                 Home
               </Button>
               <Accordion type="single" collapsible>
@@ -125,11 +198,12 @@ const Navigation = () => {
                     <div className="flex flex-col gap-2">
                       {menuItems.solutions.map((item) => (
                         <Button
-                          key={item}
+                          key={item.name}
                           variant="ghost"
                           className="justify-start text-left"
+                          onClick={() => router.push(item.route)}
                         >
-                          {item}
+                          {item.name}
                         </Button>
                       ))}
                     </div>
@@ -141,11 +215,12 @@ const Navigation = () => {
                     <div className="flex flex-col gap-2">
                       {menuItems.industries.map((item) => (
                         <Button
-                          key={item}
+                          key={item.name}
                           variant="ghost"
                           className="justify-start"
+                          onClick={() => router.push(item.route)}
                         >
-                          {item}
+                          {item.name}
                         </Button>
                       ))}
                     </div>
@@ -157,21 +232,30 @@ const Navigation = () => {
                     <div className="flex flex-col gap-2">
                       {menuItems.vlog.map((item) => (
                         <Button
-                          key={item}
+                          key={item.name}
                           variant="ghost"
                           className="justify-start"
+                          onClick={() => router.push(item.route)}
                         >
-                          {item}
+                          {item.name}
                         </Button>
                       ))}
                     </div>
                   </AccordionContent>
                 </AccordionItem>
               </Accordion>
-              <Button variant="ghost" className="justify-start">
-                Feedback
+              <Button
+                onClick={() => router.push("/feedbacks")}
+                variant="ghost"
+                className="justify-start"
+              >
+                Feedbacks
               </Button>
-              <Button variant="outline" className="mt-2">
+              <Button
+                variant="outline"
+                className="mt-2"
+                onClick={() => router.push("/contactus")}
+              >
                 Contact Us
               </Button>
             </div>

@@ -1,11 +1,16 @@
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { AvatarImage } from "@radix-ui/react-avatar";
+import Image from "next/image";
+import { useRouter } from "next/router";
 
 const Home = () => {
+  const router = useRouter();
   return (
     <div className="container mx-auto px-6 py-12">
       {/* Hero Section */}
-      <div className="flex flex-col lg:flex-row items-center justify-between">
+      <div className="flex flex-col lg:flex-row items-center justify-center gap-36">
         <div className="max-w-lg">
           <h1 className="text-3xl font-bold">AI Solution</h1>
           <h2 className="text-xl font-semibold mt-2">The Best Solution</h2>
@@ -14,12 +19,18 @@ const Home = () => {
             industry. Lorem Ipsum has been the industrys standard dummy text
             ever since the 1500s.
           </p>
-          <Button className="mt-6">Contact Us</Button>
+          <Button className="mt-6" onClick={() => router.push("/contactus")}>
+            Contact Us
+          </Button>
         </div>
         <div className="mt-6 lg:mt-0">
-          <div className="w-64 h-40 bg-gray-300 flex items-center justify-center">
-            <span className="text-gray-500">Image Placeholder</span>
-          </div>
+          <Image
+            src="/sample.jpg"
+            alt=""
+            width={400}
+            height={300}
+            className="object-cover rounded-lg"
+          />
         </div>
       </div>
 
@@ -44,7 +55,13 @@ const Home = () => {
           {/* AI Assistants */}
           <Card className="flex flex-col items-center p-6">
             <div className="w-16 h-16 bg-gray-300 rounded-full flex items-center justify-center">
-              <span className="text-gray-500">Icon</span>
+              <Avatar className="w-16 h-16">
+                <AvatarImage
+                  src="https://github.com/shadcn.png"
+                  alt="@shadcn"
+                />
+                <AvatarFallback>CN</AvatarFallback>
+              </Avatar>
             </div>
             <CardContent className="mt-4 text-center">
               <h4 className="text-lg font-semibold">AI Assistants</h4>
@@ -56,9 +73,11 @@ const Home = () => {
 
           {/* AI Automation */}
           <Card className="flex flex-col items-center p-6">
-            <div className="w-16 h-16 bg-gray-300 rounded-full flex items-center justify-center">
-              <span className="text-gray-500">Icon</span>
-            </div>
+            <Avatar className="w-16 h-16">
+              <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
+              <AvatarFallback>CN</AvatarFallback>
+            </Avatar>
+
             <CardContent className="mt-4 text-center">
               <h4 className="text-lg font-semibold">AI Automation</h4>
               <p className="text-gray-600 mt-2">
@@ -69,9 +88,10 @@ const Home = () => {
 
           {/* AI Insights */}
           <Card className="flex flex-col items-center p-6">
-            <div className="w-16 h-16 bg-gray-300 rounded-full flex items-center justify-center">
-              <span className="text-gray-500">Icon</span>
-            </div>
+            <Avatar className="w-16 h-16">
+              <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
+              <AvatarFallback>CN</AvatarFallback>
+            </Avatar>
             <CardContent className="mt-4 text-center">
               <h4 className="text-lg font-semibold">AI Insights</h4>
               <p className="text-gray-600 mt-2">
