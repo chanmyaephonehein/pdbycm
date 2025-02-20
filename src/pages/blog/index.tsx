@@ -9,18 +9,18 @@ const blogCategories = [
         title: "How AI is Transforming the Future of Work",
         description:
           "Explore how AI is reshaping the workplace and improving efficiency.",
-        image: "/placeholder.png",
+        image: "/sample.jpg",
       },
       {
         title: "Top 5 AI Trends in 2025",
         description:
           "Discover the top AI trends that will dominate in the coming years.",
-        image: "/placeholder.png",
+        image: "/sample.jpg",
       },
       {
         title: "The Role of AI in Digital Employee Experience",
         description: "How AI enhances employee engagement and productivity.",
-        image: "/placeholder.png",
+        image: "/sample.jpg",
       },
     ],
   },
@@ -32,19 +32,19 @@ const blogCategories = [
           "How AI-Solution Helped a Retail Company Boost Sales with AI-Powered Personalization",
         description:
           "A real-world example of how AI improved sales and customer experience.",
-        image: "/placeholder.png",
+        image: "/sample.jpg",
       },
       {
         title: "Enhancing Cybersecurity with AI: A Case Study in Finance",
         description:
           "Learn how AI helps detect and prevent cyber threats in finance.",
-        image: "/placeholder.png",
+        image: "/sample.jpg",
       },
       {
         title: "Automating HR Processes with AI: A Success Story",
         description:
           "See how AI streamlined HR operations and improved hiring efficiency.",
-        image: "/placeholder.png",
+        image: "/sample.jpg",
       },
     ],
   },
@@ -56,20 +56,20 @@ const blogCategories = [
           "Introducing Our AI-Powered Virtual Assistant: Features & Benefits",
         description:
           "A deep dive into the features of our latest AI-powered virtual assistant.",
-        image: "/placeholder.jpg",
+        image: "/sample.jpg",
       },
       {
         title:
           "How We Use AI to Improve Business Intelligence & Predictive Analytics",
         description: "Understand how AI enhances data-driven decision-making.",
-        image: "/placeholder.jpg",
+        image: "/sample.jpg",
       },
       {
         title:
           "Behind the Scenes: How AI-Solution Develops AI-Based Prototypes Faster",
         description:
           "An inside look at our AI-based product development process.",
-        image: "/placeholder.jpg",
+        image: "/sample.jpg",
       },
     ],
   },
@@ -94,7 +94,7 @@ export default function Blog() {
                 key={idx}
                 className="border rounded-lg p-4 shadow-md text-center"
               >
-                <div className="w-full h-40 bg-gray-300 flex items-center justify-center mb-4">
+                <div className="w-full h-40  flex items-center justify-center mb-4">
                   <Image
                     src={blog.image}
                     alt={blog.title}
