@@ -132,7 +132,9 @@ const Navigation = () => {
             </MenubarContent>
           </MenubarMenu>
           <MenubarMenu>
-            <MenubarTrigger className="font-medium">Vlog</MenubarTrigger>
+            <MenubarTrigger className="font-medium">
+              Blog & Gallery
+            </MenubarTrigger>
             <MenubarContent>
               {menuItems.vlog.map((item) => (
                 <MenubarItem
