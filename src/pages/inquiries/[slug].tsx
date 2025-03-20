@@ -1,35 +1,56 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/router";
+import { useState, useEffect } from "react";
+
+interface Inquiry {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  country: string;
+  companyName: string;
+  jobTitle: string;
+  jobDetails: string;
+  status: string;
+}
 
 const InquiryDetail = () => {
   const router = useRouter();
-  // const { slug } = router.query;
+  const id = router.query.slug as string; // Extract ID from URL
+  console.log(id);
+  const [inquiry, setInquiry] = useState<Inquiry | null>(null);
+  const [status, setStatus] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  // Static inquiry details data
-  const inquiries = {
-    name: "Thomas Muller",
-    email: "thomasmuller25@gmail.com",
-    phone: "+49 761 123 4567",
-    company: "Bayern Muchen",
-    country: "Germany",
-    jobTitle: "AI implementation in VAR System",
-    jobDetails:
-      "Allianz arena wants to implement the AI implementation in VAR System like offside system and foul system for better accuracy",
-    status: "Pending", // Initial status
+  const fetchInquiry = async () => {
+    try {
+      const response = await fetch(
+        `http://localhost:3000/api/inquiries?id=${id}`
+      );
 
-    // You can add more inquiries here as needed
+      if (!response.ok) throw new Error("No inquiry found");
+
+      const data: Inquiry = await response.json();
+      console.log(data);
+      setInquiry(data);
+      setStatus(data.status);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Get the inquiry details for the current slug
-  // const inquiry = inquiries[slug];
+  useEffect(() => {
+    if (!id || typeof id !== "string") return; // Ensure `id` is valid
+    fetchInquiry();
+  }, [id]);
 
-  // if (!inquiry) {
-  //   return <div>Inquiry not found</div>;
-  // }
-
-  const [status, setStatus] = useState(inquiries.status);
+  if (loading) return <div className="p-10">Loading...</div>;
+  if (error) return <div className="p-10 text-red-500">{error}</div>;
+  if (!inquiry) return <div className="p-10">Inquiry not found</div>;
 
   const statusOptions = ["Pending", "In Progress", "Complete"];
 
@@ -37,7 +58,7 @@ const InquiryDetail = () => {
     <div className="p-10">
       <div className="flex justify-between items-center mb-5">
         <button
-          onClick={() => router.back()}
+          onClick={() => router.push("/inquiries")}
           className="bg-gray-200 px-4 py-2 rounded"
         >
           Back
@@ -64,31 +85,31 @@ const InquiryDetail = () => {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <p className="font-bold">Name</p>
-            <p>{inquiries.name}</p>
+            <p>{inquiry.name}</p>
           </div>
           <div>
             <p className="font-bold">Email Address</p>
-            <p>{inquiries.email}</p>
+            <p>{inquiry.email}</p>
           </div>
           <div>
             <p className="font-bold">Phone Number</p>
-            <p>{inquiries.phone}</p>
+            <p>{inquiry.phone}</p>
           </div>
           <div>
             <p className="font-bold">Company Name</p>
-            <p>{inquiries.company}</p>
+            <p>{inquiry.companyName}</p>
           </div>
           <div>
             <p className="font-bold">Country</p>
-            <p>{inquiries.country}</p>
+            <p>{inquiry.country}</p>
           </div>
           <div>
             <p className="font-bold">Job Title</p>
-            <p>{inquiries.jobTitle}</p>
+            <p>{inquiry.jobTitle}</p>
           </div>
           <div className="col-span-2">
             <p className="font-bold">Job Details</p>
-            <p>{inquiries.jobDetails}</p>
+            <p>{inquiry.jobDetails}</p>
           </div>
         </div>
 

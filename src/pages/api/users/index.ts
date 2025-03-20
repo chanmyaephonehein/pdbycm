@@ -47,12 +47,11 @@ export default async function handler(
       }
 
       return res.status(200).json(users);
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error fetching users:", error);
-      return res.status(500).json({
-        message: "Internal Server Error",
-        error: error.message,
-      });
+      return res
+        .status(500)
+        .json({ error: "Server error", details: (error as Error).message });
     }
   }
 
@@ -96,11 +95,10 @@ export default async function handler(
           role: newUser.role,
         },
       });
-    } catch (error: any) {
-      return res.status(500).json({
-        message: "Error creating user",
-        error: error.message,
-      });
+    } catch (error) {
+      return res
+        .status(500)
+        .json({ error: "Server error", details: (error as Error).message });
     }
   }
 

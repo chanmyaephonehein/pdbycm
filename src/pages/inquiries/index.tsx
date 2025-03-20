@@ -1,18 +1,7 @@
 "use client";
 
-import * as React from "react";
-import {
-  ColumnDef,
-  ColumnFiltersState,
-  SortingState,
-  VisibilityState,
-  flexRender,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
+import { useState, useEffect } from "react";
+// import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -28,157 +17,128 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-  DropdownMenuCheckboxItem,
 } from "@/components/ui/dropdown-menu";
+import { useRouter } from "next/router";
 
-const statusOptions = ["Pending", "In Progress", "Complete"];
+const statusOptions = ["PENDING", "IN_PROGRESS", "RESOLVED"];
 
-export type Inquiry = {
+interface Inquiry {
   id: number;
+  name: string;
+  email: string;
+  phone: string;
   country: string;
-  company: string;
+  companyName: string;
   jobTitle: string;
+  jobDetails: string;
   status: string;
-};
+}
 
-const data: Inquiry[] = [
-  {
-    id: 1,
-    country: "Germany",
-    company: "VolksWagen",
-    jobTitle: "AI car",
-    status: "Pending",
-  },
-];
+const Inquiries = () => {
+  const [inquiries, setInquiries] = useState<Inquiry[]>([]);
+  const router = useRouter();
+  // Fetch Inquiries
+  const fetchInquiries = async () => {
+    try {
+      const response = await fetch(`http://localhost:3000/api/inquiries`);
+      if (!response.ok) alert("No user is found");
+      // throw new Error("Failed to fetch inquiries");
+      const data = await response.json();
+      setInquiries(data);
+    } catch (error) {
+      console.error("Error fetching inquiries:", error);
+    }
+  };
 
-export const columns: ColumnDef<Inquiry>[] = [
-  { accessorKey: "id", header: "No." },
-  { accessorKey: "country", header: "Country" },
-  { accessorKey: "company", header: "Company Name" },
-  { accessorKey: "jobTitle", header: "Job Title" },
-  {
-    accessorKey: "status",
-    header: "Status",
-    cell: ({ row }) => (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="outline" className="text-sm">
-            {row.getValue("status")}
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent>
-          {statusOptions.map((status) => (
-            <DropdownMenuItem
-              key={status}
-              onClick={() => (row.original.status = status)}
-            >
-              {status}
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
-    ),
-  },
-];
+  // Handle Status Update
+  const handleStatusChange = async (id: number, newStatus: string) => {
+    setInquiries((prev) =>
+      prev.map((inq) => (inq.id === id ? { ...inq, status: newStatus } : inq))
+    );
 
-const Inquiries: React.FC = () => {
-  const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
-  );
-  const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({});
-  const [rowSelection, setRowSelection] = React.useState({});
+    try {
+      const response = await fetch(`http://localhost:3000/api/inquiries`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, status: newStatus }),
+      });
 
-  const table = useReactTable({
-    data,
-    columns,
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    onColumnVisibilityChange: setColumnVisibility,
-    onRowSelectionChange: setRowSelection,
-    state: {
-      sorting,
-      columnFilters,
-      columnVisibility,
-      rowSelection,
-    },
-  });
+      if (!response.ok) return alert("Failed to update status");
+      // throw new Error("Failed to update status");
+    } catch (error) {
+      console.error("Error updating status:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchInquiries();
+  }, []);
 
   return (
     <div className="w-full p-4">
       <div className="flex justify-between mb-4">
         <Input
-          placeholder="Search"
-          value={(table.getColumn("company")?.getFilterValue() as string) ?? ""}
-          onChange={(event) =>
-            table.getColumn("company")?.setFilterValue(event.target.value)
-          }
+          placeholder="Search by Company"
           className="max-w-sm"
+          onChange={(e) => console.log(e.target.value)}
         />
-        <div className="flex gap-2">
-          <Button variant="outline">Filter</Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline">Control Column</Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {table.getAllColumns().map((column) => (
-                <DropdownMenuCheckboxItem
-                  key={column.id}
-                  checked={column.getIsVisible()}
-                  onCheckedChange={(value) => column.toggleVisibility(!!value)}
-                >
-                  {column.id}
-                </DropdownMenuCheckboxItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
       </div>
+
       <div className="rounded-md border">
         <Table>
           <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                  </TableHead>
-                ))}
-              </TableRow>
-            ))}
+            <TableRow>
+              <TableHead>No.</TableHead>
+              <TableHead>Name</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Country</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Actions</TableHead>
+            </TableRow>
           </TableHeader>
           <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id}>
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
+            {inquiries.length > 0 ? (
+              inquiries.map((inq, index) => (
+                <TableRow key={inq.id}>
+                  <TableCell>{index + 1}</TableCell>
+                  <TableCell>{inq.name}</TableCell>
+                  <TableCell>{inq.email}</TableCell>
+                  <TableCell>{inq.country}</TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline">{inq.status}</Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                        {statusOptions.map((status) => (
+                          <DropdownMenuItem
+                            key={status}
+                            onClick={() => handleStatusChange(inq.id, status)}
+                          >
+                            {status}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="outline"
+                      onClick={() =>
+                        router.push({
+                          pathname: `/inquiries/${inq.id}`,
+                        })
+                      }
+                    >
+                      View
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
-                  No results.
+                <TableCell colSpan={6} className="text-center py-4">
+                  No inquiries found.
                 </TableCell>
               </TableRow>
             )}

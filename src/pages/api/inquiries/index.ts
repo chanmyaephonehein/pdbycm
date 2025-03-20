@@ -9,25 +9,23 @@ export default async function handler(
 ) {
   if (req.method === "GET") {
     if (req.query.id) {
-      // Fetch a single inquiry by ID
-      try {
-        const inquiry = await prisma.inquiries.findUnique({
-          where: { id: parseInt(req.query.id as string) }, // Ensuring type safety for query params
-        });
+      const id = req.query.id as string;
 
-        if (!inquiry) {
-          return res.status(404).json({ error: "Inquiry not found" });
-        }
+      // Fetch inquiry from the database
+      const inquiry = await prisma.inquiries.findUnique({
+        where: { id: Number(id) },
+      });
 
-        return res.json(inquiry);
-      } catch (error) {
-        return res.status(500).json({
-          error: "Server error",
-          details: (error as Error).message, // Type assertion for error
-        });
+      // Debugging: Log fetched data
+      console.log("Fetched Inquiry:", inquiry);
+
+      if (!inquiry) {
+        console.log("No inquiry found with ID:", id);
+        return res.status(404).json({ error: "Inquiry not found" });
       }
+
+      return res.status(200).json(inquiry);
     } else {
-      // Fetch all inquiries
       try {
         const allInquiries = await prisma.inquiries.findMany();
 
@@ -39,20 +37,13 @@ export default async function handler(
       }
     }
   } else if (req.method === "POST") {
-    const {
-      name,
-      email,
-      phoneNumber,
-      companyName,
-      country,
-      jobTitle,
-      jobDetails,
-    } = req.body;
+    const { name, email, phone, companyName, country, jobTitle, jobDetails } =
+      req.body;
 
     if (
       !name ||
       !email ||
-      !phoneNumber ||
+      !phone ||
       !companyName ||
       !country ||
       !jobTitle ||
@@ -66,7 +57,7 @@ export default async function handler(
         data: {
           name,
           email,
-          phone: phoneNumber, // Corrected the field name for consistency
+          phone,
           companyName,
           country,
           jobTitle,
