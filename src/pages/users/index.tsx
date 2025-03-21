@@ -121,6 +121,7 @@ const UserManagement: React.FC = () => {
       return alert("Failed to create user: ");
     }
     await response.json();
+    fetchUsers();
     alert("User created successfully");
     setIsDialogOpen(false);
     setNewUser({

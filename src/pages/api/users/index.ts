@@ -73,16 +73,18 @@ export default async function handler(
 
     return res.status(200).send({ addedUser });
   } else if (req.method === "PUT") {
-    const { id, name } = req.body;
+    const { id, name, role, country } = req.body;
 
-    if (!id || !name) {
-      return res.status(400).json({ message: "ID and name are required" });
+    if (!id || !name || !role || !country) {
+      return res
+        .status(400)
+        .json({ message: "ID, name, role, and country are required" });
     }
 
     try {
       const updatedUser = await prisma.user.update({
         where: { id: parseInt(id as string) },
-        data: { name },
+        data: { name, role, country },
       });
 
       return res.json(updatedUser);
@@ -92,7 +94,7 @@ export default async function handler(
         .json({ error: "Server error", details: (error as Error).message });
     }
   } else if (req.method === "DELETE") {
-    const { id } = req.body;
+    const { id } = req.query;
 
     if (!id) {
       return res.status(400).json({ message: "ID is required" });
