@@ -111,8 +111,6 @@ export default function UserDetailsPage() {
 
   return (
     <div className="p-6">
-      <h2 className="text-xl font-bold mb-4">User Management Detail</h2>
-
       <div className="mb-4">
         <Button
           variant="outline"
@@ -122,20 +120,28 @@ export default function UserDetailsPage() {
         </Button>
       </div>
 
-      <div className="border p-4 w-[400px]">
+      <div className="border p-4 w-[400px] rounded-lg shadow-md bg-white">
         <div className="grid grid-cols-2 gap-4">
-          <p>
-            <strong>Name:</strong> {user.name}
-          </p>
-          <p>
-            <strong>Email Address:</strong> {user.email}
-          </p>
-          <p>
-            <strong>Role:</strong> {user.role}
-          </p>
-          <p>
-            <strong>Country:</strong> {user.country}
-          </p>
+          <div>
+            <Label className="text-sm font-semibold text-gray-600">Name</Label>
+            <p className="text-md text-gray-800">{user.name}</p>
+          </div>
+          <div>
+            <Label className="text-sm font-semibold text-gray-600">
+              Email Address
+            </Label>
+            <p className="text-md text-gray-800">{user.email}</p>
+          </div>
+          <div>
+            <Label className="text-sm font-semibold text-gray-600">Role</Label>
+            <p className="text-md text-gray-800">{user.role}</p>
+          </div>
+          <div>
+            <Label className="text-sm font-semibold text-gray-600">
+              Country
+            </Label>
+            <p className="text-md text-gray-800">{user.country}</p>
+          </div>
         </div>
       </div>
 

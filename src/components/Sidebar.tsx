@@ -1,25 +1,25 @@
+"use client";
+
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 const Sidebar = () => {
   return (
-    <div className="hidden md:flex flex-col w-64 bg-gray-100 h-screen p-4">
-      <div className="text-xl font-bold mb-6">AI-Solution</div>
-      <nav className="flex flex-col gap-4">
-        <Link href="/dashboard" className="p-2 rounded-md hover:bg-gray-200">
-          Dashboard
-        </Link>
-        <Link href="/inquiries" className="p-2 rounded-md hover:bg-gray-200">
-          Inquiries
-        </Link>
-        <Link href="/users" className="p-2 rounded-md hover:bg-gray-200">
-          Users Management
-        </Link>
-        <Link
-          href="/blog-creation"
-          className="p-2 rounded-md hover:bg-gray-200"
-        >
-          Blog Creation
-        </Link>
+    <div className="hidden md:flex flex-col w-64 bg-gray-100 h-screen p-4 border-r">
+      <div className="text-2xl font-bold mb-6 px-2">AI-Solution</div>
+
+      <nav className="flex flex-col gap-2">
+        <Button variant="ghost" className="justify-start px-2" asChild>
+          <Link href="/dashboard">Dashboard</Link>
+        </Button>
+
+        <Button variant="ghost" className="justify-start px-2" asChild>
+          <Link href="/inquiries">Inquiries</Link>
+        </Button>
+
+        <Button variant="ghost" className="justify-start px-2" asChild>
+          <Link href="/users">Users Management</Link>
+        </Button>
       </nav>
     </div>
   );

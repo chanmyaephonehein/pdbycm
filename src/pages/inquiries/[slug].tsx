@@ -2,6 +2,17 @@
 
 import { useRouter } from "next/router";
 import { useState, useEffect } from "react";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 
 interface Inquiry {
   id: number;
@@ -15,117 +26,139 @@ interface Inquiry {
   status: string;
 }
 
+// ✅ Ensure status options match the enum from Inquiry List
+const statusOptions = [
+  { label: "Pending", value: "PENDING" },
+  { label: "In Progress", value: "IN_PROGRESS" },
+  { label: "Resolved", value: "RESOLVED" },
+];
+
 const InquiryDetail = () => {
   const router = useRouter();
-  const id = router.query.slug as string; // Extract ID from URL
-  console.log(id);
   const [inquiry, setInquiry] = useState<Inquiry | null>(null);
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const fetchInquiry = async () => {
+  // ✅ Fetch from DB when slug is ready
+  useEffect(() => {
+    const fetchInquiry = async (inquiryId: string) => {
+      try {
+        const res = await fetch(
+          `http://localhost:3000/api/inquiries?id=${inquiryId}`
+        );
+        if (!res.ok) throw new Error("Inquiry not found");
+
+        const data: Inquiry = await res.json();
+        setInquiry(data);
+        setStatus(data.status); // ✅ status directly from DB
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Error occurred");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const slug = router.query.slug;
+    if (typeof slug === "string") {
+      fetchInquiry(slug);
+    }
+  }, [router.query.slug]);
+
+  // ✅ Update status on dropdown change
+  const handleStatusChange = async (newStatus: string) => {
+    if (!inquiry) return;
+    setStatus(newStatus); // optimistic update
+
     try {
-      const response = await fetch(
-        `http://localhost:3000/api/inquiries?id=${id}`
-      );
+      const res = await fetch(`http://localhost:3000/api/inquiries`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: inquiry.id, status: newStatus }),
+      });
 
-      if (!response.ok) throw new Error("No inquiry found");
+      if (!res.ok) throw new Error("Update failed");
 
-      const data: Inquiry = await response.json();
-      console.log(data);
-      setInquiry(data);
-      setStatus(data.status);
+      const updated = await res.json();
+      setInquiry(updated);
+      setStatus(updated.status);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
-    } finally {
-      setLoading(false);
+      alert("Failed to update status.");
+      console.error(err);
     }
   };
-
-  useEffect(() => {
-    if (!id || typeof id !== "string") return; // Ensure `id` is valid
-    fetchInquiry();
-  }, [id]);
 
   if (loading) return <div className="p-10">Loading...</div>;
   if (error) return <div className="p-10 text-red-500">{error}</div>;
   if (!inquiry) return <div className="p-10">Inquiry not found</div>;
 
-  const statusOptions = ["Pending", "In Progress", "Complete"];
-
   return (
-    <div className="p-10">
-      <div className="flex justify-between items-center mb-5">
-        <button
-          onClick={() => router.push("/inquiries")}
-          className="bg-gray-200 px-4 py-2 rounded"
-        >
+    <div className="p-10 space-y-6">
+      <div className="flex justify-between items-center">
+        <Button variant="outline" onClick={() => router.push("/inquiries")}>
           Back
-        </button>
-        <div className="col-span-2">
-          <p className="font-bold">Status</p>
-          <select
-            className="border border-gray-300 rounded p-2 w-full"
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-          >
-            {statusOptions.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
+        </Button>
+        <div className="w-64">
+          <Label className="mb-1 block">Status</Label>
+          <Select value={status} onValueChange={handleStatusChange}>
+            <SelectTrigger>
+              <SelectValue>{status || "Select status"}</SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {statusOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
-      <div className="bg-white p-6 shadow-md rounded-lg">
-        <h2 className="text-xl font-semibold mb-4">Inquiry Detail</h2>
+      <div className="bg-white p-6 rounded-lg shadow-md space-y-6">
+        <h2 className="text-xl font-semibold">Inquiry Details</h2>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <p className="font-bold">Name</p>
-            <p>{inquiry.name}</p>
+            <Label>Name</Label>
+            <Input disabled value={inquiry.name} />
           </div>
           <div>
-            <p className="font-bold">Email Address</p>
-            <p>{inquiry.email}</p>
+            <Label>Email Address</Label>
+            <Input disabled value={inquiry.email} />
           </div>
           <div>
-            <p className="font-bold">Phone Number</p>
-            <p>{inquiry.phone}</p>
+            <Label>Phone Number</Label>
+            <Input disabled value={inquiry.phone} />
           </div>
           <div>
-            <p className="font-bold">Company Name</p>
-            <p>{inquiry.companyName}</p>
+            <Label>Company Name</Label>
+            <Input disabled value={inquiry.companyName} />
           </div>
           <div>
-            <p className="font-bold">Country</p>
-            <p>{inquiry.country}</p>
+            <Label>Country</Label>
+            <Input disabled value={inquiry.country} />
           </div>
           <div>
-            <p className="font-bold">Job Title</p>
-            <p>{inquiry.jobTitle}</p>
+            <Label>Job Title</Label>
+            <Input disabled value={inquiry.jobTitle} />
           </div>
           <div className="col-span-2">
-            <p className="font-bold">Job Details</p>
-            <p>{inquiry.jobDetails}</p>
+            <Label>Job Details</Label>
+            <Textarea disabled value={inquiry.jobDetails} />
           </div>
         </div>
 
-        <div className="mt-8">
-          <input
-            type="text"
-            placeholder="Enter Objective"
-            className="w-full p-2 border border-gray-300 rounded mb-4"
-          />
-          <textarea
-            placeholder="Enter your response"
-            className="w-full p-2 border border-gray-300 rounded mb-4"
-          />
-          <button className="bg-blue-500 text-white px-4 py-2 rounded">
+        <div className="space-y-4 mt-6">
+          <Label>Objective</Label>
+          <Input placeholder="Enter objective" />
+
+          <Label>Your Response</Label>
+          <Textarea placeholder="Enter your response" rows={4} />
+
+          <Button className="mt-2 bg-blue-500 hover:bg-blue-600 text-white">
             Send Mail
-          </button>
+          </Button>
         </div>
       </div>
     </div>
