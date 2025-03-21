@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-// import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -37,12 +36,11 @@ interface Inquiry {
 const Inquiries = () => {
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const router = useRouter();
-  // Fetch Inquiries
+
   const fetchInquiries = async () => {
     try {
-      const response = await fetch(`http://localhost:3000/api/inquiries`);
-      if (!response.ok) alert("No user is found");
-      // throw new Error("Failed to fetch inquiries");
+      const response = await fetch("http://localhost:3000/api/inquiries");
+      if (!response.ok) alert("Failed to fetch inquiries");
       const data = await response.json();
       setInquiries(data);
     } catch (error) {
@@ -50,21 +48,19 @@ const Inquiries = () => {
     }
   };
 
-  // Handle Status Update
   const handleStatusChange = async (id: number, newStatus: string) => {
     setInquiries((prev) =>
       prev.map((inq) => (inq.id === id ? { ...inq, status: newStatus } : inq))
     );
 
     try {
-      const response = await fetch(`http://localhost:3000/api/inquiries`, {
+      const response = await fetch("http://localhost:3000/api/inquiries", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id, status: newStatus }),
       });
 
-      if (!response.ok) return alert("Failed to update status");
-      // throw new Error("Failed to update status");
+      if (!response.ok) alert("Failed to update status");
     } catch (error) {
       console.error("Error updating status:", error);
     }
@@ -83,7 +79,6 @@ const Inquiries = () => {
           onChange={(e) => console.log(e.target.value)}
         />
       </div>
-
       <div className="rounded-md border">
         <Table>
           <TableHeader>
