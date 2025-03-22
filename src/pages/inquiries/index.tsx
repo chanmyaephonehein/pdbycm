@@ -161,7 +161,7 @@ const Inquiries = () => {
                 options={statusOptions}
                 value={tempFilterStatuses}
                 onChange={(selected) => {
-                  setTempFilterStatuses(selected as any);
+                  setTempFilterStatuses(selected);
                 }}
                 className="text-black"
               />
