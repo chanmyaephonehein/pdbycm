@@ -18,17 +18,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import {
-  Select as UiSelect,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import Select from "react-select";
 import { useRouter } from "next/router";
 
-const statusOptions = ["PENDING", "IN_PROGRESS", "RESOLVED"];
+const statusOptions = [
+  { label: "PENDING", value: "PENDING" },
+  { label: "IN_PROGRESS", value: "IN_PROGRESS" },
+  { label: "RESOLVED", value: "RESOLVED" },
+];
 
 interface Inquiry {
   id: number;
@@ -40,24 +38,24 @@ interface Inquiry {
   jobTitle: string;
   jobDetails: string;
   status: string;
+  createdAt: string; // Should be ISO string (e.g., from DB)
 }
 
 const Inquiries = () => {
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
-  const [filterStatus, setFilterStatus] = useState<string | undefined>(
-    undefined
-  );
+  const [filterStatuses, setFilterStatuses] = useState<string[]>([]);
   const [filterCountry, setFilterCountry] = useState<string | undefined>(
     undefined
   );
-  const [tempFilterStatus, setTempFilterStatus] = useState<string | undefined>(
-    undefined
-  );
+  const [tempFilterStatuses, setTempFilterStatuses] = useState<
+    { label: string; value: string }[]
+  >([]);
   const [tempFilterCountry, setTempFilterCountry] = useState<
     string | undefined
   >(undefined);
+  const [showRecentOnly, setShowRecentOnly] = useState(false);
 
   const router = useRouter();
 
@@ -95,13 +93,20 @@ const Inquiries = () => {
   }, []);
 
   const filteredInquiries = useMemo(() => {
-    return inquiries.filter(
-      (inq) =>
+    const now = Date.now();
+
+    return inquiries.filter((inq) => {
+      const createdAt = new Date(inq.createdAt).getTime();
+      const isRecent = now - createdAt <= 3 * 60 * 60 * 1000; // last 3 hours
+
+      return (
         inq.companyName.toLowerCase().includes(searchTerm.toLowerCase()) &&
-        (!filterStatus || inq.status === filterStatus) &&
-        (!filterCountry || inq.country === filterCountry)
-    );
-  }, [inquiries, searchTerm, filterStatus, filterCountry]);
+        (filterStatuses.length === 0 || filterStatuses.includes(inq.status)) &&
+        (!filterCountry || inq.country === filterCountry) &&
+        (!showRecentOnly || isRecent)
+      );
+    });
+  }, [inquiries, searchTerm, filterStatuses, filterCountry, showRecentOnly]);
 
   const uniqueCountries = Array.from(
     new Set(inquiries.map((inq) => inq.country))
@@ -117,16 +122,28 @@ const Inquiries = () => {
           onChange={(e) => setSearchTerm(e.target.value)}
         />
 
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <Button
             variant="outline"
             onClick={() => {
-              setTempFilterStatus(filterStatus);
+              setTempFilterStatuses(
+                filterStatuses.map((status) => ({
+                  value: status,
+                  label: status,
+                }))
+              );
               setTempFilterCountry(filterCountry);
               setIsFilterDialogOpen(true);
             }}
           >
             Filter Options
+          </Button>
+
+          <Button
+            variant={showRecentOnly ? "default" : "outline"}
+            onClick={() => setShowRecentOnly((prev) => !prev)}
+          >
+            {showRecentOnly ? "Showing Recent" : "Recent (Last 3h)"}
           </Button>
         </div>
       </div>
@@ -137,51 +154,40 @@ const Inquiries = () => {
           <DialogTitle>Filter Inquiries</DialogTitle>
           <div className="space-y-4">
             <div>
-              <Label>Status</Label>
-              <UiSelect
-                value={tempFilterStatus ?? "__all__"}
-                onValueChange={(val) =>
-                  setTempFilterStatus(val === "__all__" ? undefined : val)
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="All Statuses" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__all__">All</SelectItem>
-                  {statusOptions.map((status) => (
-                    <SelectItem key={status} value={status}>
-                      {status}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </UiSelect>
+              <Label>Status (Multiple)</Label>
+              <Select
+                placeholder="All Status (Default)"
+                isMulti
+                options={statusOptions}
+                value={tempFilterStatuses}
+                onChange={(selected) => {
+                  setTempFilterStatuses(selected as any);
+                }}
+                className="text-black"
+              />
             </div>
+
             <div>
               <Label>Country</Label>
-              <UiSelect
-                value={tempFilterCountry ?? "__all__"}
-                onValueChange={(val) =>
-                  setTempFilterCountry(val === "__all__" ? undefined : val)
+              <select
+                value={tempFilterCountry ?? ""}
+                onChange={(e) =>
+                  setTempFilterCountry(e.target.value || undefined)
                 }
+                className="w-full border p-2 rounded text-black"
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="All Countries" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__all__">All</SelectItem>
-                  {uniqueCountries.map((country) => (
-                    <SelectItem key={country} value={country}>
-                      {country}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </UiSelect>
+                <option value="">All Countries</option>
+                {uniqueCountries.map((country) => (
+                  <option key={country} value={country}>
+                    {country}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <Button
               onClick={() => {
-                setFilterStatus(tempFilterStatus);
+                setFilterStatuses(tempFilterStatuses.map((s) => s.value));
                 setFilterCountry(tempFilterCountry);
                 setIsFilterDialogOpen(false);
               }}
@@ -221,10 +227,12 @@ const Inquiries = () => {
                       <DropdownMenuContent>
                         {statusOptions.map((status) => (
                           <DropdownMenuItem
-                            key={status}
-                            onClick={() => handleStatusChange(inq.id, status)}
+                            key={status.value}
+                            onClick={() =>
+                              handleStatusChange(inq.id, status.value)
+                            }
                           >
-                            {status}
+                            {status.label}
                           </DropdownMenuItem>
                         ))}
                       </DropdownMenuContent>
