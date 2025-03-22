@@ -83,7 +83,9 @@ export default function UserDetailsPage() {
       });
 
       if (!response.ok) {
-        return alert("Failed to update user");
+        setOpenEditDialog(false);
+        setRole(user.role);
+        return alert("Cannot change role. At least one admin must remain.");
       }
 
       const result = await response.json();
@@ -97,11 +99,12 @@ export default function UserDetailsPage() {
 
   const handleDelete = async () => {
     try {
-      await fetch(`http://localhost:3000/api/users?id=${id}`, {
+      const response = await fetch(`http://localhost:3000/api/users?id=${id}`, {
         method: "DELETE",
       });
+      const message = await response.json();
       router.push("/users");
-      alert("User Deleted Successfully!");
+      alert(message.message);
     } catch (error) {
       console.error("Error deleting user:", error);
     } finally {

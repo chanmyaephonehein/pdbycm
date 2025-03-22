@@ -82,6 +82,27 @@ export default async function handler(
     }
 
     try {
+      const existingUser = await prisma.user.findUnique({
+        where: { id: parseInt(id as string) },
+      });
+
+      if (!existingUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // If current user is Admin and role is changing to non-admin
+      if (existingUser.role === "Admin" && role !== "Admin") {
+        const adminCount = await prisma.user.count({
+          where: { role: "Admin" },
+        });
+
+        if (adminCount <= 1) {
+          return res.status(403).json({
+            message: "Cannot change role. At least one admin must remain.",
+          });
+        }
+      }
+
       const updatedUser = await prisma.user.update({
         where: { id: parseInt(id as string) },
         data: { name, role, country },
@@ -89,9 +110,10 @@ export default async function handler(
 
       return res.json(updatedUser);
     } catch (error) {
-      return res
-        .status(500)
-        .json({ error: "Server error", details: (error as Error).message });
+      return res.status(500).json({
+        error: "Server error",
+        details: (error as Error).message,
+      });
     }
   } else if (req.method === "DELETE") {
     const { id } = req.query;
@@ -101,7 +123,30 @@ export default async function handler(
     }
 
     try {
-      await prisma.user.delete({ where: { id: parseInt(id as string) } });
+      const userToDelete = await prisma.user.findUnique({
+        where: { id: parseInt(id as string) },
+      });
+
+      if (!userToDelete) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      if (userToDelete.role === "Admin") {
+        const adminCount = await prisma.user.count({
+          where: { role: "Admin" },
+        });
+
+        if (adminCount <= 1) {
+          return res.status(403).json({
+            message: "Cannot delete the last remaining admin account.",
+          });
+        }
+      }
+
+      await prisma.user.delete({
+        where: { id: parseInt(id as string) },
+      });
+
       return res.json({ message: "User deleted successfully" });
     } catch (error) {
       return res

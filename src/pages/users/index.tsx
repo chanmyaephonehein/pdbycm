@@ -163,7 +163,7 @@ const UserManagement: React.FC = () => {
   }, [users, filterRole, filterCountry]);
 
   const columns: ColumnDef<User>[] = [
-    { accessorKey: "id", header: "No." },
+    { accessorKey: "id", header: "No.", cell: ({ row }) => row.index + 1 },
     { accessorKey: "name", header: "Name" },
     { accessorKey: "email", header: "Email" },
     { accessorKey: "role", header: "Role" },
