@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -17,6 +17,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import {
+  Select as UiSelect,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import { useRouter } from "next/router";
 
 const statusOptions = ["PENDING", "IN_PROGRESS", "RESOLVED"];
@@ -35,6 +44,21 @@ interface Inquiry {
 
 const Inquiries = () => {
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
+  const [filterStatus, setFilterStatus] = useState<string | undefined>(
+    undefined
+  );
+  const [filterCountry, setFilterCountry] = useState<string | undefined>(
+    undefined
+  );
+  const [tempFilterStatus, setTempFilterStatus] = useState<string | undefined>(
+    undefined
+  );
+  const [tempFilterCountry, setTempFilterCountry] = useState<
+    string | undefined
+  >(undefined);
+
   const router = useRouter();
 
   const fetchInquiries = async () => {
@@ -70,16 +94,106 @@ const Inquiries = () => {
     fetchInquiries();
   }, []);
 
+  const filteredInquiries = useMemo(() => {
+    return inquiries.filter(
+      (inq) =>
+        inq.companyName.toLowerCase().includes(searchTerm.toLowerCase()) &&
+        (!filterStatus || inq.status === filterStatus) &&
+        (!filterCountry || inq.country === filterCountry)
+    );
+  }, [inquiries, searchTerm, filterStatus, filterCountry]);
+
+  const uniqueCountries = Array.from(
+    new Set(inquiries.map((inq) => inq.country))
+  );
+
   return (
     <div className="w-full p-4">
-      <div className="flex justify-between mb-4">
+      <div className="flex flex-wrap justify-between gap-4 mb-4">
         <Input
           placeholder="Search by Company"
           className="max-w-sm"
-          onChange={(e) => console.log(e.target.value)}
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
         />
+
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => {
+              setTempFilterStatus(filterStatus);
+              setTempFilterCountry(filterCountry);
+              setIsFilterDialogOpen(true);
+            }}
+          >
+            Filter Options
+          </Button>
+        </div>
       </div>
-      <div className="rounded-md border">
+
+      {/* Filter Dialog */}
+      <Dialog open={isFilterDialogOpen} onOpenChange={setIsFilterDialogOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogTitle>Filter Inquiries</DialogTitle>
+          <div className="space-y-4">
+            <div>
+              <Label>Status</Label>
+              <UiSelect
+                value={tempFilterStatus ?? "__all__"}
+                onValueChange={(val) =>
+                  setTempFilterStatus(val === "__all__" ? undefined : val)
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="All Statuses" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__all__">All</SelectItem>
+                  {statusOptions.map((status) => (
+                    <SelectItem key={status} value={status}>
+                      {status}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </UiSelect>
+            </div>
+            <div>
+              <Label>Country</Label>
+              <UiSelect
+                value={tempFilterCountry ?? "__all__"}
+                onValueChange={(val) =>
+                  setTempFilterCountry(val === "__all__" ? undefined : val)
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="All Countries" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__all__">All</SelectItem>
+                  {uniqueCountries.map((country) => (
+                    <SelectItem key={country} value={country}>
+                      {country}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </UiSelect>
+            </div>
+
+            <Button
+              onClick={() => {
+                setFilterStatus(tempFilterStatus);
+                setFilterCountry(tempFilterCountry);
+                setIsFilterDialogOpen(false);
+              }}
+              className="mt-2"
+            >
+              Apply Filters
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <div className="rounded-md border overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
@@ -92,8 +206,8 @@ const Inquiries = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {inquiries.length > 0 ? (
-              inquiries.map((inq, index) => (
+            {filteredInquiries.length > 0 ? (
+              filteredInquiries.map((inq, index) => (
                 <TableRow key={inq.id}>
                   <TableCell>{index + 1}</TableCell>
                   <TableCell>{inq.name}</TableCell>
