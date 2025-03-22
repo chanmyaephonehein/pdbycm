@@ -112,10 +112,7 @@ export default function UserDetailsPage() {
   return (
     <div className="p-6">
       <div className="mb-4">
-        <Button
-          variant="outline"
-          onClick={() => router.push("/user-management")}
-        >
+        <Button variant="outline" onClick={() => router.push("/users")}>
           Back
         </Button>
       </div>

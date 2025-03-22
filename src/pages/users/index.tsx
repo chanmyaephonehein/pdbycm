@@ -1,8 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { useState, useEffect } from "react";
-import { Eye, EyeOff } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { Eye, EyeOff, Filter } from "lucide-react";
 import Select from "react-select";
 import {
   ColumnDef,
@@ -26,12 +26,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import {
   Select as UiSelect,
   SelectContent,
@@ -41,7 +36,7 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import countryList from "react-select-country-list";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 
 export type User = {
   id: number;
@@ -58,9 +53,21 @@ const UserManagement: React.FC = () => {
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
   const [passwordMismatch, setPasswordMismatch] = useState(false);
+  const [filterRole, setFilterRole] = useState<string | undefined>(undefined);
+  const [filterCountry, setFilterCountry] = useState<string | undefined>(
+    undefined
+  );
+  const [tempFilterRole, setTempFilterRole] = useState<string | undefined>(
+    undefined
+  );
+  const [tempFilterCountry, setTempFilterCountry] = useState<
+    string | undefined
+  >(undefined);
+  const [searchTerm, setSearchTerm] = useState("");
   const router = useRouter();
 
   const [newUser, setNewUser] = useState({
@@ -81,7 +88,7 @@ const UserManagement: React.FC = () => {
     try {
       const response = await fetch("http://localhost:3000/api/users");
       const data = await response.json();
-      setUsers(data);
+      setUsers(data.slice(0, 100)); // limit for performance
     } catch (error) {
       console.error("Error fetching users:", error);
     }
@@ -91,7 +98,12 @@ const UserManagement: React.FC = () => {
     fetchUsers();
   }, []);
 
-  console.log(users);
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      table.getColumn("name")?.setFilterValue(searchTerm);
+    }, 300);
+    return () => clearTimeout(timeout);
+  }, [searchTerm]);
 
   const handleCreateUser = async () => {
     if (
@@ -111,29 +123,44 @@ const UserManagement: React.FC = () => {
     }
     setPasswordMismatch(false);
 
-    const response = await fetch("http://localhost:3000/api/users", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(newUser), // ✅ Ensuring it's a valid object
-    });
+    try {
+      const response = await fetch("http://localhost:3000/api/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newUser),
+      });
 
-    if (!response.ok) {
-      return alert("Failed to create user: ");
+      if (!response.ok) throw new Error("Failed to create user");
+
+      await response.json();
+      fetchUsers();
+      alert("User created successfully");
+      setIsDialogOpen(false);
+      setNewUser({
+        name: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+        role: "",
+        country: "",
+      });
+      setSelectedCountry(null);
+    } catch (error) {
+      console.error("Error creating user:", error);
+      alert(
+        "Failed to create user: " +
+          (error instanceof Error ? error.message : "Unknown error")
+      );
     }
-    await response.json();
-    fetchUsers();
-    alert("User created successfully");
-    setIsDialogOpen(false);
-    setNewUser({
-      name: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
-      role: "",
-      country: "",
-    });
-    setSelectedCountry(null);
   };
+
+  const filteredUsers = useMemo(() => {
+    return users.filter(
+      (user) =>
+        (!filterRole || user.role === filterRole) &&
+        (!filterCountry || user.country === filterCountry)
+    );
+  }, [users, filterRole, filterCountry]);
 
   const columns: ColumnDef<User>[] = [
     { accessorKey: "id", header: "No." },
@@ -156,7 +183,7 @@ const UserManagement: React.FC = () => {
   ];
 
   const table = useReactTable({
-    data: users,
+    data: filteredUsers,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -174,106 +201,183 @@ const UserManagement: React.FC = () => {
     },
   });
 
+  const roleOptions = Array.from(new Set(users.map((u) => u.role)));
+  const countryOptions = Array.from(new Set(users.map((u) => u.country)));
+
   return (
     <div className="w-full p-4">
-      <div className="flex justify-between mb-4">
+      <div className="flex flex-wrap justify-between gap-4 mb-4">
         <Input
           placeholder="Search"
-          value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
-          onChange={(event) =>
-            table.getColumn("name")?.setFilterValue(event.target.value)
-          }
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
           className="max-w-sm"
         />
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button variant="default">+ Add User</Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogTitle>Add New User</DialogTitle>
+
+        <div className="flex flex-wrap gap-2 items-center">
+          <Button
+            variant="outline"
+            onClick={() => {
+              setTempFilterRole(filterRole);
+              setTempFilterCountry(filterCountry);
+              setIsFilterDialogOpen(true);
+            }}
+          >
+            <Filter className="w-4 h-4 mr-2" /> Filter Options
+          </Button>
+
+          <Button variant="default" onClick={() => setIsDialogOpen(true)}>
+            + Add User
+          </Button>
+        </div>
+      </div>
+
+      {/* Filter Dialog */}
+      <Dialog open={isFilterDialogOpen} onOpenChange={setIsFilterDialogOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogTitle>Filter Users</DialogTitle>
+          <div className="space-y-4">
+            <div>
+              <Label>Role</Label>
+              <UiSelect
+                value={tempFilterRole ?? "__all__"}
+                onValueChange={(val) =>
+                  setTempFilterRole(val === "__all__" ? undefined : val)
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="All Roles" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__all__">All</SelectItem>
+                  {roleOptions.map((role) => (
+                    <SelectItem key={role} value={role}>
+                      {role}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </UiSelect>
+            </div>
+            <div>
+              <Label>Country</Label>
+              <UiSelect
+                value={tempFilterCountry ?? "__all__"}
+                onValueChange={(val) =>
+                  setTempFilterCountry(val === "__all__" ? undefined : val)
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="All Countries" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__all__">All</SelectItem>
+                  {countryOptions.map((country) => (
+                    <SelectItem key={country} value={country}>
+                      {country}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </UiSelect>
+            </div>
+            <Button
+              onClick={() => {
+                setFilterRole(tempFilterRole);
+                setFilterCountry(tempFilterCountry);
+                setIsFilterDialogOpen(false);
+              }}
+              className="mt-2"
+            >
+              Apply Filters
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add User Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogTitle>Add New User</DialogTitle>
+          <Input
+            placeholder="Name"
+            value={newUser.name}
+            onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
+          />
+          <Input
+            placeholder="Email"
+            value={newUser.email}
+            onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+          />
+          <div className="relative">
             <Input
-              placeholder="Name"
-              value={newUser.name}
-              onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
-            />
-            <Input
-              placeholder="Email"
-              value={newUser.email}
+              type={passwordVisible ? "text" : "password"}
+              placeholder="Password"
+              value={newUser.password}
               onChange={(e) =>
-                setNewUser({ ...newUser, email: e.target.value })
+                setNewUser({ ...newUser, password: e.target.value })
               }
             />
-            <div className="relative">
-              <Input
-                type={passwordVisible ? "text" : "password"}
-                placeholder="Password"
-                value={newUser.password}
-                onChange={(e) =>
-                  setNewUser({ ...newUser, password: e.target.value })
-                }
-              />
-              <button
-                type="button"
-                className="absolute right-3 top-3"
-                onClick={() => setPasswordVisible(!passwordVisible)}
-              >
-                {passwordVisible ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-            </div>
-            <div className="relative">
-              <Input
-                type={confirmPasswordVisible ? "text" : "password"}
-                placeholder="Re-enter Password"
-                value={newUser.confirmPassword}
-                onChange={(e) =>
-                  setNewUser({ ...newUser, confirmPassword: e.target.value })
-                }
-              />
-              <button
-                type="button"
-                className="absolute right-3 top-3"
-                onClick={() =>
-                  setConfirmPasswordVisible(!confirmPasswordVisible)
-                }
-              >
-                {confirmPasswordVisible ? (
-                  <EyeOff size={18} />
-                ) : (
-                  <Eye size={18} />
-                )}
-              </button>
-            </div>
-            {passwordMismatch && (
-              <p className="text-red-500 text-sm">Passwords do not match</p>
-            )}
-            <UiSelect
-              onValueChange={(value) => setNewUser({ ...newUser, role: value })}
+            <button
+              type="button"
+              className="absolute right-3 top-2.5"
+              onClick={() => setPasswordVisible(!passwordVisible)}
             >
-              <SelectTrigger>
-                <SelectValue placeholder="Select Role" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Admin">Admin</SelectItem>
-                <SelectItem value="Staff">Staff</SelectItem>
-              </SelectContent>
-            </UiSelect>
-            <Label>Country</Label>
+              {passwordVisible ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
+          <div className="relative">
+            <Input
+              type={confirmPasswordVisible ? "text" : "password"}
+              placeholder="Re-enter Password"
+              value={newUser.confirmPassword}
+              onChange={(e) =>
+                setNewUser({ ...newUser, confirmPassword: e.target.value })
+              }
+            />
+            <button
+              type="button"
+              className="absolute right-3 top-2.5"
+              onClick={() => setConfirmPasswordVisible(!confirmPasswordVisible)}
+            >
+              {confirmPasswordVisible ? (
+                <EyeOff size={18} />
+              ) : (
+                <Eye size={18} />
+              )}
+            </button>
+          </div>
+          {passwordMismatch && (
+            <p className="text-red-500 text-sm">Passwords do not match</p>
+          )}
+          <UiSelect
+            onValueChange={(value) => setNewUser({ ...newUser, role: value })}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select Role" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Admin">Admin</SelectItem>
+              <SelectItem value="Staff">Staff</SelectItem>
+            </SelectContent>
+          </UiSelect>
+          <Label>Country</Label>
+          {typeof window !== "undefined" && (
             <Select
-              options={countryList().getData()} // ✅ Dynamically loads all countries
+              options={countryList().getData()}
               value={selectedCountry}
               onChange={(selected) => {
                 setSelectedCountry(selected);
-                setNewUser({ ...newUser, country: selected?.label || "" }); // ✅ Correctly updates the country
+                setNewUser({ ...newUser, country: selected?.label || "" });
               }}
               placeholder="Select a country"
               className="w-full text-black"
             />
-            <Button onClick={handleCreateUser}>Create</Button>
-          </DialogContent>
-        </Dialog>
-      </div>
+          )}
+          <Button onClick={handleCreateUser}>Create</Button>
+        </DialogContent>
+      </Dialog>
 
-      <div className="rounded-md border">
+      {/* Table */}
+      <div className="overflow-x-auto rounded-md border">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -290,7 +394,7 @@ const UserManagement: React.FC = () => {
             ))}
           </TableHeader>
           <TableBody>
-            {users.length > 0 ? (
+            {table.getRowModel().rows.length > 0 ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow key={row.id}>
                   {row.getVisibleCells().map((cell) => (
