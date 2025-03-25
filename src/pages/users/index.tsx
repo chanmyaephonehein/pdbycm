@@ -84,13 +84,31 @@ const UserManagement: React.FC = () => {
     label: string;
   } | null>(null);
 
-  const fetchUsers = async () => {
+  const fetchUsers = async (searchTerm = "") => {
     try {
-      const response = await fetch("http://localhost:3000/api/users");
+      let query = "";
+
+      // If there's a search term, append it to the query
+      if (searchTerm) {
+        query = `?search=${encodeURIComponent(searchTerm)}`;
+      }
+
+      const response = await fetch(`http://localhost:3000/api/users${query}`);
       const data = await response.json();
-      setUsers(data.slice(0, 100)); // limit for performance
+
+      if (!response.ok) {
+        alert(data.message || "Error fetching users. Please try again.");
+        return;
+      }
+
+      if (data.length === 0) {
+        alert("No users found for the search criteria.");
+      } else {
+        setUsers(data.slice(0, 100)); // Limit the data for performance
+      }
     } catch (error) {
       console.error("Error fetching users:", error);
+      alert("An error occurred while fetching users. Please try again.");
     }
   };
 
@@ -98,12 +116,12 @@ const UserManagement: React.FC = () => {
     fetchUsers();
   }, []);
 
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      table.getColumn("name")?.setFilterValue(searchTerm);
-    }, 300);
-    return () => clearTimeout(timeout);
-  }, [searchTerm]);
+  // useEffect(() => {
+  //   const timeout = setTimeout(() => {
+  //     fetchUsers(searchTerm);
+  //   }, 500);
+  //   return () => clearTimeout(timeout);
+  // }, [searchTerm]);
 
   const handleCreateUser = async () => {
     if (
@@ -207,12 +225,26 @@ const UserManagement: React.FC = () => {
   return (
     <div className="w-full p-4">
       <div className="flex flex-wrap justify-between gap-4 mb-4">
-        <Input
-          placeholder="Search"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="max-w-sm"
-        />
+        <div className="flex gap-2">
+          <Input
+            placeholder="Search by name, email, role, or country"
+            value={searchTerm}
+            onChange={(e) => {
+              const value = e.target.value;
+              setSearchTerm(value);
+
+              // If input is cleared, fetch all users
+              if (value === "") {
+                fetchUsers(); // Call fetch without any search term to get all users
+              }
+            }}
+            className="max-w-sm"
+          />
+
+          <Button onClick={() => fetchUsers(searchTerm)} variant="outline">
+            Search
+          </Button>
+        </div>
 
         <div className="flex flex-wrap gap-2 items-center">
           <Button

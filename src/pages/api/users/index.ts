@@ -9,7 +9,7 @@ export default async function handler(
   res: NextApiResponse
 ) {
   if (req.method === "GET") {
-    const { id } = req.query;
+    const { id, search } = req.query;
     console.log("Here is the query", req.query);
     try {
       if (id) {
@@ -31,15 +31,37 @@ export default async function handler(
         return res.status(200).json(user);
       }
 
-      const users = await prisma.user.findMany({
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          role: true,
-          country: true,
-        },
-      });
+      let users;
+
+      if (search) {
+        users = await prisma.user.findMany({
+          where: {
+            OR: [
+              { name: { contains: search as string, mode: "insensitive" } },
+              { email: { contains: search as string, mode: "insensitive" } },
+              { role: { contains: search as string, mode: "insensitive" } },
+              { country: { contains: search as string, mode: "insensitive" } },
+            ],
+          },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+            country: true,
+          },
+        });
+      } else {
+        users = await prisma.user.findMany({
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+            country: true,
+          },
+        });
+      }
 
       if (!users || users.length === 0) {
         return res.status(404).json({ message: "No users found" });
@@ -47,7 +69,6 @@ export default async function handler(
 
       return res.status(200).json(users);
     } catch (error) {
-      console.error("Error fetching users:", error);
       return res
         .status(500)
         .json({ error: "Server error", details: (error as Error).message });
