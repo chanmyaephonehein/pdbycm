@@ -21,6 +21,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import Select from "react-select";
 import { useRouter } from "next/router";
+import { Filter } from "lucide-react";
 
 const statusOptions = [
   { label: "PENDING", value: "PENDING" },
@@ -38,12 +39,13 @@ interface Inquiry {
   jobTitle: string;
   jobDetails: string;
   status: string;
-  createdAt: string; // Should be ISO string (e.g., from DB)
+  createdAt: string;
 }
 
 const Inquiries = () => {
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentSearchTerm, setCurrentSearchTerm] = useState("");
   const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
   const [filterStatuses, setFilterStatuses] = useState<string[]>([]);
   const [filterCountry, setFilterCountry] = useState<string | undefined>(
@@ -59,11 +61,25 @@ const Inquiries = () => {
 
   const router = useRouter();
 
-  const fetchInquiries = async () => {
+  const fetchInquiries = async (searchTerm = "") => {
     try {
-      const response = await fetch("http://localhost:3000/api/inquiries");
-      if (!response.ok) alert("Failed to fetch inquiries");
+      let query = "";
+
+      // If there's a search term, append it to the query
+      if (searchTerm) {
+        query = `?search=${encodeURIComponent(searchTerm)}`;
+      }
+
+      const response = await fetch(
+        `http://localhost:3000/api/inquiries${query}`
+      );
       const data = await response.json();
+
+      if (!response.ok) {
+        alert("Failed to fetch inquiries");
+        return;
+      }
+
       setInquiries(data);
     } catch (error) {
       console.error("Error fetching inquiries:", error);
@@ -88,8 +104,26 @@ const Inquiries = () => {
     }
   };
 
-  useEffect(() => {
+  const handleSearch = () => {
+    // Update current search term and trigger search
+    if (searchTerm.trim()) {
+      setCurrentSearchTerm(searchTerm);
+      fetchInquiries(searchTerm);
+    }
+  };
+
+  const handleReset = () => {
+    // Reset search term and current search term
+    setSearchTerm("");
+    setCurrentSearchTerm("");
+
+    // Fetch all inquiries
     fetchInquiries();
+  };
+
+  useEffect(() => {
+    // Fetch all inquiries on initial load
+    fetchInquiries("");
   }, []);
 
   const filteredInquiries = useMemo(() => {
@@ -99,14 +133,30 @@ const Inquiries = () => {
       const createdAt = new Date(inq.createdAt).getTime();
       const isRecent = now - createdAt <= 3 * 60 * 60 * 1000; // last 3 hours
 
+      // Search across multiple fields
+      const matchesSearch =
+        !currentSearchTerm ||
+        inq.name.toLowerCase().includes(currentSearchTerm.toLowerCase()) ||
+        inq.email.toLowerCase().includes(currentSearchTerm.toLowerCase()) ||
+        inq.companyName
+          .toLowerCase()
+          .includes(currentSearchTerm.toLowerCase()) ||
+        inq.country.toLowerCase().includes(currentSearchTerm.toLowerCase());
+
       return (
-        inq.companyName.toLowerCase().includes(searchTerm.toLowerCase()) &&
+        matchesSearch &&
         (filterStatuses.length === 0 || filterStatuses.includes(inq.status)) &&
         (!filterCountry || inq.country === filterCountry) &&
         (!showRecentOnly || isRecent)
       );
     });
-  }, [inquiries, searchTerm, filterStatuses, filterCountry, showRecentOnly]);
+  }, [
+    inquiries,
+    currentSearchTerm,
+    filterStatuses,
+    filterCountry,
+    showRecentOnly,
+  ]);
 
   const uniqueCountries = Array.from(
     new Set(inquiries.map((inq) => inq.country))
@@ -115,12 +165,30 @@ const Inquiries = () => {
   return (
     <div className="w-full p-4">
       <div className="flex flex-wrap justify-between gap-4 mb-4">
-        <Input
-          placeholder="Search by Company"
-          className="max-w-sm"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
+        <div className="flex gap-2 w-full max-w-2xl">
+          {" "}
+          {/* Increased width */}
+          <Input
+            placeholder="Search by name, email, company, or country"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="flex-grow" // Make input take available space
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                handleSearch();
+              }
+            }}
+          />
+          <Button onClick={handleSearch} variant="outline">
+            Search
+          </Button>
+          {/* Add a reset button */}
+          {currentSearchTerm && (
+            <Button onClick={handleReset} variant="secondary">
+              Reset
+            </Button>
+          )}
+        </div>
 
         <div className="flex gap-2 flex-wrap">
           <Button
@@ -136,7 +204,7 @@ const Inquiries = () => {
               setIsFilterDialogOpen(true);
             }}
           >
-            Filter Options
+            <Filter className="w-4 h-4 mr-2" /> Filter Options
           </Button>
 
           <Button

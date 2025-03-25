@@ -8,33 +8,54 @@ export default async function handler(
   res: NextApiResponse
 ) {
   if (req.method === "GET") {
-    if (req.query.id) {
-      const id = req.query.id as string;
+    const { id, search } = req.query;
+    console.log("Here is the query", req.query);
 
-      // Fetch inquiry from the database
-      const inquiry = await prisma.inquiries.findUnique({
-        where: { id: Number(id) },
+    try {
+      if (id) {
+        const inquiry = await prisma.inquiries.findUnique({
+          where: { id: parseInt(id as string) },
+        });
+
+        if (!inquiry) {
+          return res.status(404).json({ message: "Inquiry not found" });
+        }
+
+        return res.status(200).json(inquiry);
+      }
+
+      let inquiries;
+
+      if (search) {
+        inquiries = await prisma.inquiries.findMany({
+          where: {
+            OR: [
+              { name: { contains: search as string, mode: "insensitive" } },
+              { email: { contains: search as string, mode: "insensitive" } },
+              {
+                companyName: {
+                  contains: search as string,
+                  mode: "insensitive",
+                },
+              },
+              { country: { contains: search as string, mode: "insensitive" } },
+            ],
+          },
+        });
+      } else {
+        inquiries = await prisma.inquiries.findMany();
+      }
+
+      if (!inquiries || inquiries.length === 0) {
+        return res.status(404).json({ message: "No inquiries found" });
+      }
+
+      return res.status(200).json(inquiries);
+    } catch (error) {
+      return res.status(500).json({
+        error: "Server error",
+        details: (error as Error).message,
       });
-
-      // Debugging: Log fetched data
-      console.log("Fetched Inquiry:", inquiry);
-
-      if (!inquiry) {
-        console.log("No inquiry found with ID:", id);
-        return res.status(404).json({ error: "Inquiry not found" });
-      }
-
-      return res.status(200).json(inquiry);
-    } else {
-      try {
-        const allInquiries = await prisma.inquiries.findMany();
-
-        return res.json(allInquiries);
-      } catch (error) {
-        return res
-          .status(500)
-          .json({ error: "Server error", details: (error as Error).message });
-      }
     }
   } else if (req.method === "POST") {
     const { name, email, phone, companyName, country, jobTitle, jobDetails } =
