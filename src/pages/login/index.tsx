@@ -6,6 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog"; //
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -149,37 +156,32 @@ export default function LoginPage() {
         </CardContent>
       </Card>
       {showSuccessDialog && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white p-6 rounded shadow-lg w-[300px]">
-            <h2 className="text-xl mb-4">Two-Step Authentication!</h2>
-            <p className="mb-4">
-              Enter the send to your email to complete login process:
-            </p>
-            <input
-              type="text"
+        <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle>Two-Step Authentication</DialogTitle>
+              <DialogDescription>
+                Enter the code sent to your email to complete the login process:
+              </DialogDescription>
+            </DialogHeader>
+            <Input
+              type="number"
               value={dialogInput}
               onChange={(e) => setDialogInput(e.target.value)}
-              className="border-gray-800 rounded-sm p-2 focus:outline-none focus:ring-2 border-2 focus:ring-blue-500 w-full"
-              placeholder="Enter details"
+              placeholder="Enter code"
+              className="mt-2"
             />
-            <div className="flex justify-between mt-4">
-              <button
+            <div className="flex justify-end gap-2 mt-4">
+              <Button
+                variant="secondary"
                 onClick={() => setShowSuccessDialog(false)}
-                className="bg-gray-500 text-white font-semibold py-2 px-4 rounded hover:bg-gray-600"
               >
                 Cancel
-              </button>
-              <button
-                onClick={() => {
-                  confirmCode();
-                }}
-                className="bg-blue-500 text-white font-semibold py-2 px-4 rounded hover:bg-blue-600"
-              >
-                Confirm
-              </button>
+              </Button>
+              <Button onClick={confirmCode}>Confirm</Button>
             </div>
-          </div>
-        </div>
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );
