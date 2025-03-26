@@ -23,6 +23,8 @@ model User {
   verify              Boolean            @default(false)
   twoStepCode         Int                @default(0)// Token for 2 factor mail, nullable
   codeExpiresAt       DateTime?          // Expriry time for the two steo code, nullable
+  resetToken          String?            // Token for password reset, nullable
+  resetTokenExpiry    DateTime?          // Expiry time for the reset token, nullable
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

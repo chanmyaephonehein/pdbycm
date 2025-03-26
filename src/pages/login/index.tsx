@@ -23,6 +23,7 @@ export default function LoginPage() {
   const [showSuccessDialog, setShowSuccessDialog] = useState(false); // Tracks success dialog visibility
   const [countdown, setCountdown] = useState(0); // Countdown timer for reset link
   const [dialogInput, setDialogInput] = useState(""); // Stores input in the success dialog
+  const [showForgotPassword, setShowForgotPassword] = useState(false); // Tracks forgot password dialog visibility
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -52,25 +53,23 @@ export default function LoginPage() {
     }
   };
 
-  // Handles sending the reset email
+  // Frontend fetch function with improved error handling
   const handleSendMail = async () => {
-    try {
-      const response = await fetch("http://localhost:3000/api/auth/forgot", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email }),
-      });
-      if (response.ok) {
-        alert("Password reset link has been sent to your email. Click OK!");
-        setCountdown(60);
-      } else {
-        alert("Fill email input to reset!");
-      }
-    } catch (error) {
-      console.error("Error:", error);
-      alert("An error occurred. Please try again later.");
+    const response = await fetch("http://localhost:3000/api/auth/forgot", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email }), // Ensure email is always a string
+    });
+
+    if (response.ok) {
+      alert("Password reset link has been sent to your email. Click OK!");
+      setCountdown(60);
+    } else {
+      const responseData = await response.json();
+      alert(responseData.message);
     }
-    localStorage.setItem("countdown", "60");
   };
 
   // Handles multi-factor authentication
@@ -97,8 +96,7 @@ export default function LoginPage() {
 
   // Initialize countdown from localStorage
   useEffect(() => {
-    const cd = localStorage.getItem("countdown");
-    setCountdown(Number(cd));
+    setCountdown(Number(0));
   }, []);
 
   // Countdown timer logic
@@ -112,6 +110,13 @@ export default function LoginPage() {
 
     return () => clearInterval(timer); // Clear the timer when the countdown reaches 0 or on component unmount
   }, [countdown]);
+
+  // Formats the countdown for display
+  const formatCountdown = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${minutes}:${secs < 10 ? "0" : ""}${secs}`;
+  };
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100 p-4">
@@ -149,7 +154,10 @@ export default function LoginPage() {
 
           <p className="text-center text-sm">
             Forgot Password?{" "}
-            <span className="text-blue-600 underline cursor-pointer">
+            <span
+              onClick={() => setShowForgotPassword(true)}
+              className="text-blue-600 underline cursor-pointer"
+            >
               Click Here
             </span>
           </p>
@@ -180,6 +188,41 @@ export default function LoginPage() {
               </Button>
               <Button onClick={confirmCode}>Confirm</Button>
             </div>
+          </DialogContent>
+        </Dialog>
+      )}
+      {showForgotPassword && (
+        <Dialog open={showForgotPassword} onOpenChange={setShowForgotPassword}>
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle>Reset Password</DialogTitle>
+              <DialogDescription>
+                Enter your email to receive a reset link.
+              </DialogDescription>
+            </DialogHeader>
+            <Input
+              type="email"
+              value={email}
+              onChange={(evt) => setEmail(evt.target.value)}
+              placeholder="Enter your email"
+              className="mt-2"
+            />
+            {countdown === 0 ? (
+              <Button className="w-full mt-4" onClick={handleSendMail}>
+                Send Reset Link
+              </Button>
+            ) : (
+              <p className="text-center text-sm text-blue-600 font-bold mt-4">
+                Wait: {formatCountdown(countdown)}
+              </p>
+            )}
+            <Button
+              variant="ghost"
+              className="w-full mt-2"
+              onClick={() => setShowForgotPassword(false)}
+            >
+              Cancel
+            </Button>
           </DialogContent>
         </Dialog>
       )}

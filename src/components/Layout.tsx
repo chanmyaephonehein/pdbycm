@@ -10,6 +10,7 @@ const Layout = ({ children }: { children: ReactNode }) => {
   const isDashboard = router.pathname.includes("dashboard");
   const isInquiries = router.pathname.includes("inquiries");
   const isUsers = router.pathname.includes("users");
+  const isReset = router.pathname.includes("reset");
   if (isLogin) {
     return <div className="">{children}</div>;
   }
@@ -36,7 +37,9 @@ const Layout = ({ children }: { children: ReactNode }) => {
       );
     }
   }
-
+  if (isReset) {
+    return <div>{children}</div>;
+  }
   return (
     <div>
       <Navigation />
