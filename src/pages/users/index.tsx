@@ -357,9 +357,6 @@ const UserManagement: React.FC = () => {
 
       {/* Add User Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogTrigger asChild>
-          <Button variant="default">+ Add User</Button>
-        </DialogTrigger>
         <DialogContent>
           <DialogTitle>Add New User</DialogTitle>
           <Input
