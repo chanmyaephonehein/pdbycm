@@ -12,10 +12,11 @@ const Layout = ({ children }: { children: ReactNode }) => {
   const isUsers = router.pathname.includes("users");
   const isReset = router.pathname.includes("reset");
   const isVerify = router.pathname.includes("verify");
+  const isPf = router.pathname.includes("profile");
   if (isLogin) {
     return <div className="">{children}</div>;
   }
-  if (isDashboard || isInquiries || isUsers) {
+  if (isDashboard || isInquiries || isUsers || isPf) {
     if (isDashboard) {
       return (
         <AdminLayout route="Dashboard">
@@ -33,6 +34,13 @@ const Layout = ({ children }: { children: ReactNode }) => {
     if (isUsers) {
       return (
         <AdminLayout route="Users Management">
+          <div>{children}</div>
+        </AdminLayout>
+      );
+    }
+    if (isPf) {
+      return (
+        <AdminLayout route="Profile">
           <div>{children}</div>
         </AdminLayout>
       );
