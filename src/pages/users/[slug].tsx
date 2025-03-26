@@ -89,9 +89,18 @@ export default function UserDetailsPage() {
       }
 
       const result = await response.json();
-      setUser(result);
+      setUser(result.user);
       setOpenEditDialog(false);
       alert("User updated successfully!");
+
+      // ✅ Check if edited user is the same as the logged-in user
+      const token = localStorage.getItem("token");
+      if (token) {
+        const decoded = JSON.parse(atob(token.split(".")[1]));
+        if (decoded.id === result.user.id && result.token) {
+          localStorage.setItem("token", result.token);
+        }
+      }
     } catch (error) {
       console.error("Error updating user:", error);
     }

@@ -1,3 +1,4 @@
+import { generateToken } from "@/utils/jwtUtils";
 import { PrismaClient } from "@prisma/client";
 import crypto from "crypto";
 import { NextApiRequest, NextApiResponse } from "next";
@@ -175,8 +176,8 @@ export default async function handler(
         where: { id: parseInt(id as string) },
         data: { name, role, country },
       });
-
-      return res.json(updatedUser);
+      const newToken = generateToken(updatedUser);
+      res.status(200).json({ user: updatedUser, token: newToken });
     } catch (error) {
       return res.status(500).json({
         error: "Server error",

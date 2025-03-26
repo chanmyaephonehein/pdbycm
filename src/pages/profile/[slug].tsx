@@ -32,8 +32,8 @@ type User = {
   country: string;
 };
 
-// Decode token just to get ID
-const decodeToken = (token: string): { id: number } | null => {
+// Decode token just to get ID and role
+const decodeToken = (token: string): { id: number; role: string } | null => {
   try {
     const payload = token.split(".")[1];
     return JSON.parse(atob(payload));
@@ -53,14 +53,16 @@ export default function ProfilePage() {
   const [resetCountdown, setResetCountdown] = useState(0);
   const [showResetDialog, setShowResetDialog] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [isStaff, setIsStaff] = useState(false); // <- NEW
 
-  // Fetch full user details
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) return;
 
     const decoded = decodeToken(token);
     if (!decoded?.id) return;
+
+    if (decoded.role === "Staff") setIsStaff(true); // ← detect if staff
 
     fetch(`/api/users?id=${decoded.id}`)
       .then((res) => res.json())
@@ -123,9 +125,20 @@ export default function ProfilePage() {
       });
 
       if (res.ok) {
-        const updated = await res.json();
-        setUser(updated); // Optional: update local user
-        alert("Profile updated successfully.");
+        const { user: updated, token } = await res.json();
+        setUser(updated);
+        setRole(updated.role);
+        setName(updated.name);
+        const matched = countryOptions.find((c) => c.label === updated.country);
+        setSelectedCountry(matched || null);
+
+        // 🟡 Store the new token to reflect updated role
+        if (token) {
+          localStorage.setItem("token", token);
+          alert("Profile updated and session refreshed.");
+        } else {
+          alert("Profile updated, but token refresh failed.");
+        }
       } else {
         const error = await res.json();
         alert(error.message || "Failed to update profile.");
@@ -179,15 +192,19 @@ export default function ProfilePage() {
 
             <div>
               <Label>Role</Label>
-              <UiSelect value={role} onValueChange={setRole}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Admin">Admin</SelectItem>
-                  <SelectItem value="Staff">Staff</SelectItem>
-                </SelectContent>
-              </UiSelect>
+              {isStaff ? (
+                <Input disabled value={role} />
+              ) : (
+                <UiSelect value={role} onValueChange={setRole}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Admin">Admin</SelectItem>
+                    <SelectItem value="Staff">Staff</SelectItem>
+                  </SelectContent>
+                </UiSelect>
+              )}
             </div>
 
             <div>
@@ -212,6 +229,7 @@ export default function ProfilePage() {
           </div>
         </CardContent>
       </Card>
+
       <p className="text-sm text-muted-foreground pt-3">
         *Changes will only be saved if you click the save button. If you leave
         without saving, your updates will be lost.
