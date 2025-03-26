@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "User" ADD COLUMN     "codeExpiresAt" TIMESTAMP(3),
+ADD COLUMN     "twoStepCode" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "verify" BOOLEAN NOT NULL DEFAULT false;
