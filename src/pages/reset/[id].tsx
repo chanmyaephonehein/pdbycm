@@ -91,7 +91,6 @@ const ResetPassword = () => {
 
   const ifExpire = async () => {
     if (!token) return;
-    console.log("leepl");
     try {
       const res = await fetch("http://localhost:3000/api/auth/expiry", {
         method: "POST",

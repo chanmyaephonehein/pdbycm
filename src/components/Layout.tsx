@@ -11,6 +11,7 @@ const Layout = ({ children }: { children: ReactNode }) => {
   const isInquiries = router.pathname.includes("inquiries");
   const isUsers = router.pathname.includes("users");
   const isReset = router.pathname.includes("reset");
+  const isVerify = router.pathname.includes("verify");
   if (isLogin) {
     return <div className="">{children}</div>;
   }
@@ -37,7 +38,7 @@ const Layout = ({ children }: { children: ReactNode }) => {
       );
     }
   }
-  if (isReset) {
+  if (isReset || isVerify) {
     return <div>{children}</div>;
   }
   return (

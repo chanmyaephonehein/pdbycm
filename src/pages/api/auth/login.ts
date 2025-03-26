@@ -67,12 +67,9 @@ export default async function handler(
     // Send verification email with the code
     await transporter.sendMail(mailOptions);
 
-    // const token = generateToken(user);
-    // return res.status(200).json({ token, role: user.role });
-
-    return res
-      .status(200)
-      .send("Verification code sent to your email. Please verify.");
+    return res.status(200).send({
+      messsage: "Verification code sent to your email. Please verify.",
+    });
   } catch (error) {
     return res.status(500).json({
       message: "Internal server error",

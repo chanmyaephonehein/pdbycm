@@ -26,12 +26,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import {
   Select as UiSelect,
   SelectContent,
@@ -143,35 +138,26 @@ const UserManagement: React.FC = () => {
     }
     setPasswordMismatch(false);
 
-    try {
-      const response = await fetch("http://localhost:3000/api/users", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newUser),
-      });
+    const response = await fetch("http://localhost:3000/api/users", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newUser),
+    });
+    const message = await response.json();
 
-      if (!response.ok) throw new Error("Failed to create user");
+    if (!response.ok) return alert(message.message);
 
-      await response.json();
-      fetchUsers();
-      alert("User created successfully");
-      setIsDialogOpen(false);
-      setNewUser({
-        name: "",
-        email: "",
-        password: "",
-        confirmPassword: "",
-        role: "",
-        country: "",
-      });
-      setSelectedCountry(null);
-    } catch (error) {
-      console.error("Error creating user:", error);
-      alert(
-        "Failed to create user: " +
-          (error instanceof Error ? error.message : "Unknown error")
-      );
-    }
+    alert(message.message);
+    setIsDialogOpen(false);
+    setNewUser({
+      name: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+      role: "",
+      country: "",
+    });
+    setSelectedCountry(null);
   };
 
   // Enhanced search functionality

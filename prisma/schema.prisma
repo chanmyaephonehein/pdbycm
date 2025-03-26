@@ -24,7 +24,7 @@ model User {
   twoStepCode         Int                @default(0)// Token for 2 factor mail, nullable
   codeExpiresAt       DateTime?          // Expriry time for the two steo code, nullable
   resetToken          String?            // Token for password reset, nullable
-  resetTokenExpiry    DateTime?          // Expiry time for the reset token, nullable
+  resetTokenExpiry    DateTime?      
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -49,3 +49,14 @@ model Inquiries {
   updatedAt   DateTime @updatedAt
 }
 
+model EmailVerifications {
+  id        Int      @id @default(autoincrement())
+  name      String?
+  email     String   @unique
+  password  String
+  role      String
+  country   String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}

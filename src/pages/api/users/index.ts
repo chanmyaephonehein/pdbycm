@@ -1,8 +1,17 @@
 import { PrismaClient } from "@prisma/client";
-import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import { NextApiRequest, NextApiResponse } from "next";
+import nodemailer from "nodemailer";
 
 const prisma = new PrismaClient();
+
+const transporter = nodemailer.createTransport({
+  service: "Gmail", // or your preferred email service
+  auth: {
+    user: process.env.EMAIL_USER, // Gmail account
+    pass: process.env.EMAIL_PASS, // App password (to be replaced with environment variable for security)
+  },
+});
 
 export default async function handler(
   req: NextApiRequest,
@@ -85,14 +94,52 @@ export default async function handler(
       return res.status(400).json({ message: "Email already in use" });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    console.log(hashedPassword);
-    const addedUser = await prisma.user.create({
-      data: { email, name, password: hashedPassword, role, country },
+    const duplicate = await prisma.emailVerifications.findFirst({
+      where: { email },
     });
 
-    return res.status(200).send({ addedUser });
+    if (duplicate) await prisma.emailVerifications.delete({ where: { email } });
+
+    const verificationToken = crypto.randomBytes(32).toString("hex");
+    const tokenExpiry = new Date(Date.now() + 10 * 60 * 1500); // Token expires in 15 minutes
+
+    // Store the verification token temporarily in the database
+    await prisma.emailVerifications.create({
+      data: {
+        name: name || "",
+        email,
+        password,
+        role,
+        country,
+        token: verificationToken,
+        expiresAt: tokenExpiry,
+      },
+    });
+
+    // Send verification email
+    const verificationUrl = `http://localhost:3000/verify/${verificationToken}`;
+    const mailOptions = {
+      to: email,
+      from: process.env.EMAIL_USER,
+      subject: "Verify Your Email",
+      text: `Click the link to verify your email: ${verificationUrl}. The link expires in 15 minutes.`,
+    };
+
+    // Send email with verification link
+    await transporter.sendMail(mailOptions);
+    return res
+      .status(200)
+      .send({ message: "Verification email sent. Please check your email." });
+
+    // /////////
+    // const hashedPassword = await bcrypt.hash(password, 10);
+
+    // console.log(hashedPassword);
+    // const addedUser = await prisma.user.create({
+    //   data: { email, name, password: hashedPassword, role, country },
+    // });
+
+    // return res.status(200).send({ addedUser });
   } else if (req.method === "PUT") {
     const { id, name, role, country } = req.body;
 
