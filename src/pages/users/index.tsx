@@ -26,7 +26,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import {
   Select as UiSelect,
   SelectContent,
@@ -352,7 +357,86 @@ const UserManagement: React.FC = () => {
 
       {/* Add User Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        {/* Dialog content remains the same */}
+        <DialogTrigger asChild>
+          <Button variant="default">+ Add User</Button>
+        </DialogTrigger>
+        <DialogContent>
+          <DialogTitle>Add New User</DialogTitle>
+          <Input
+            placeholder="Name"
+            value={newUser.name}
+            onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
+          />
+          <Input
+            placeholder="Email"
+            value={newUser.email}
+            onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+          />
+          <div className="relative">
+            <Input
+              type={passwordVisible ? "text" : "password"}
+              placeholder="Password"
+              value={newUser.password}
+              onChange={(e) =>
+                setNewUser({ ...newUser, password: e.target.value })
+              }
+            />
+            <button
+              type="button"
+              className="absolute right-3 top-3"
+              onClick={() => setPasswordVisible(!passwordVisible)}
+            >
+              {passwordVisible ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
+          <div className="relative">
+            <Input
+              type={confirmPasswordVisible ? "text" : "password"}
+              placeholder="Re-enter Password"
+              value={newUser.confirmPassword}
+              onChange={(e) =>
+                setNewUser({ ...newUser, confirmPassword: e.target.value })
+              }
+            />
+            <button
+              type="button"
+              className="absolute right-3 top-3"
+              onClick={() => setConfirmPasswordVisible(!confirmPasswordVisible)}
+            >
+              {confirmPasswordVisible ? (
+                <EyeOff size={18} />
+              ) : (
+                <Eye size={18} />
+              )}
+            </button>
+          </div>
+          {passwordMismatch && (
+            <p className="text-red-500 text-sm">Passwords do not match</p>
+          )}
+          <UiSelect
+            onValueChange={(value) => setNewUser({ ...newUser, role: value })}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select Role" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Admin">Admin</SelectItem>
+              <SelectItem value="Staff">Staff</SelectItem>
+            </SelectContent>
+          </UiSelect>
+          <Label>Country</Label>
+          <Select
+            options={countryList().getData()} // ✅ Dynamically loads all countries
+            value={selectedCountry}
+            onChange={(selected) => {
+              setSelectedCountry(selected);
+              setNewUser({ ...newUser, country: selected?.label || "" }); // ✅ Correctly updates the country
+            }}
+            placeholder="Select a country"
+            className="w-full text-black"
+          />
+          <Button onClick={handleCreateUser}>Create</Button>
+        </DialogContent>
       </Dialog>
 
       {/* Table */}
