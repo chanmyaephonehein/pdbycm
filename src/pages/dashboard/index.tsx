@@ -15,8 +15,16 @@ const Dashboard = () => {
     const fetchCounts = async () => {
       try {
         const [inquiriesRes, usersRes] = await Promise.all([
-          fetch("http://localhost:3000/api/inquiries"),
-          fetch("http://localhost:3000/api/users"),
+          fetch("http://localhost:3000/api/inquiries", {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }),
+          fetch("http://localhost:3000/api/users", {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }),
         ]);
 
         if (!inquiriesRes.ok || !usersRes.ok) {

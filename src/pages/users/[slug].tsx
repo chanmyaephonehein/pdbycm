@@ -78,7 +78,10 @@ export default function UserDetailsPage() {
     try {
       const response = await fetch(`http://localhost:3000/api/users`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
         body: JSON.stringify(updatedUser),
       });
 
@@ -110,6 +113,9 @@ export default function UserDetailsPage() {
     try {
       const response = await fetch(`http://localhost:3000/api/users?id=${id}`, {
         method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
       });
       const message = await response.json();
       router.push("/users");

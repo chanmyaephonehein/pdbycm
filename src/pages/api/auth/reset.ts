@@ -17,6 +17,10 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    return res.status(401).json({ message: "Authorization header missing" });
+  }
   const { token, newPw } = req.body; // Extract the token and new password from the request body
   console.log(token, newPw);
   // Validate if the token and new password are provided, and if the password is sufficiently long

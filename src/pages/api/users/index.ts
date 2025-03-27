@@ -19,6 +19,10 @@ export default async function handler(
   res: NextApiResponse
 ) {
   if (req.method === "GET") {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(401).json({ message: "Authorization header missing" });
+    }
     const { id, search } = req.query;
     console.log("Here is the query", req.query);
     try {
@@ -84,6 +88,10 @@ export default async function handler(
         .json({ error: "Server error", details: (error as Error).message });
     }
   } else if (req.method === "POST") {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(401).json({ message: "Authorization header missing" });
+    }
     const { name, email, password, role, country } = req.body;
 
     if (!name || !email || !password || !role || !country) {
@@ -142,6 +150,10 @@ export default async function handler(
 
     // return res.status(200).send({ addedUser });
   } else if (req.method === "PUT") {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(401).json({ message: "Authorization header missing" });
+    }
     const { id, name, role, country } = req.body;
 
     if (!id || !name || !role || !country) {
@@ -185,6 +197,10 @@ export default async function handler(
       });
     }
   } else if (req.method === "DELETE") {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(401).json({ message: "Authorization header missing" });
+    }
     const { id } = req.query;
 
     if (!id) {

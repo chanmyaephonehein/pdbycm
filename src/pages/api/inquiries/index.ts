@@ -8,6 +8,10 @@ export default async function handler(
   res: NextApiResponse
 ) {
   if (req.method === "GET") {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(401).json({ message: "Authorization header missing" });
+    }
     const { id, search } = req.query;
     console.log("Here is the query", req.query);
 
@@ -58,6 +62,10 @@ export default async function handler(
       });
     }
   } else if (req.method === "POST") {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(401).json({ message: "Authorization header missing" });
+    }
     const { name, email, phone, companyName, country, jobTitle, jobDetails } =
       req.body;
 
@@ -93,6 +101,10 @@ export default async function handler(
         .json({ error: "Server error", details: (error as Error).message });
     }
   } else if (req.method === "PUT") {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(401).json({ message: "Authorization header missing" });
+    }
     const { id, status } = req.body;
 
     if (!id || !status) {

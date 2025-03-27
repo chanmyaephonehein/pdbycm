@@ -17,6 +17,10 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    return res.status(401).json({ message: "Authorization header missing" });
+  }
   // Enhanced error handling and logging
   const { email } = req.body; // Extract the email from the request body
   if (!email) return res.status(400).send({ message: "Fill the mail" });

@@ -97,7 +97,12 @@ const UserManagement: React.FC = () => {
         query = `?search=${encodeURIComponent(searchTerm)}`;
       }
 
-      const response = await fetch(`http://localhost:3000/api/users${query}`);
+      const token = localStorage.getItem("token");
+      const response = await fetch(`http://localhost:3000/api/users${query}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       const data = await response.json();
 
       if (!response.ok) {
@@ -115,6 +120,26 @@ const UserManagement: React.FC = () => {
       alert("An error occurred while fetching users. Please try again.");
     }
   };
+
+  const decodeToken = (token: string) => {
+    try {
+      const payload = token.split(".")[1];
+      return JSON.parse(atob(payload));
+    } catch (error) {
+      return null;
+    }
+  };
+
+  useEffect(() => {
+    const token = localStorage.getItem("token"); // Assuming the token is stored in localStorage
+    if (token) {
+      const decoded = decodeToken(token);
+      if (decoded && decoded.role === "Staff") {
+        alert("You do not have permission to access this page.");
+        router.push("/dashboard"); // Redirect to an unauthorized page
+      }
+    }
+  }, []);
 
   useEffect(() => {
     fetchUsers();
@@ -138,9 +163,13 @@ const UserManagement: React.FC = () => {
     }
     setPasswordMismatch(false);
 
+    const token = localStorage.getItem("token");
     const response = await fetch("http://localhost:3000/api/users", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
       body: JSON.stringify(newUser),
     });
     const message = await response.json();

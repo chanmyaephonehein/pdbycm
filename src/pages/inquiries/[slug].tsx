@@ -40,12 +40,52 @@ const InquiryDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const [objective, setObjective] = useState("");
+  const [response, setResponse] = useState("");
+  const [sending, setSending] = useState(false);
+
+  const handleSendEmail = async () => {
+    if (!inquiry || !response) return;
+    setSending(true);
+
+    try {
+      const res = await fetch("http://localhost:3000/api/send", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`, // Add authorization header
+        },
+        body: JSON.stringify({
+          to: inquiry.email,
+          objective: objective,
+          response: response,
+          inquiryId: inquiry.id,
+        }),
+      });
+
+      if (!res.ok) throw new Error("Failed to send email");
+      alert("Email sent successfully!");
+      setObjective("");
+      setResponse("");
+    } catch (error) {
+      alert("Failed to send email");
+      console.error(error);
+    } finally {
+      setSending(false);
+    }
+  };
+
   // ✅ Fetch from DB when slug is ready
   useEffect(() => {
     const fetchInquiry = async (inquiryId: string) => {
       try {
         const res = await fetch(
-          `http://localhost:3000/api/inquiries?id=${inquiryId}`
+          `http://localhost:3000/api/inquiries?id=${inquiryId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
         );
         if (!res.ok) throw new Error("Inquiry not found");
 
@@ -73,7 +113,10 @@ const InquiryDetail = () => {
     try {
       const res = await fetch(`http://localhost:3000/api/inquiries`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
         body: JSON.stringify({ id: inquiry.id, status: newStatus }),
       });
 
@@ -150,14 +193,29 @@ const InquiryDetail = () => {
         </div>
 
         <div className="space-y-4 mt-6">
+          {/* Objective Input */}
           <Label>Objective</Label>
-          <Input placeholder="Enter objective" />
+          <Input
+            placeholder="Enter objective"
+            value={objective}
+            onChange={(e) => setObjective(e.target.value)}
+          />
 
+          {/* Response Input */}
           <Label>Your Response</Label>
-          <Textarea placeholder="Enter your response" rows={4} />
+          <Textarea
+            placeholder="Enter your response"
+            rows={4}
+            value={response}
+            onChange={(e) => setResponse(e.target.value)}
+          />
 
-          <Button className="mt-2 bg-blue-500 hover:bg-blue-600 text-white">
-            Send Mail
+          <Button
+            className="mt-2 bg-blue-500 hover:bg-blue-600 text-white"
+            onClick={handleSendEmail}
+            disabled={sending || !response}
+          >
+            {sending ? "Sending..." : "Send Mail"}
           </Button>
         </div>
       </div>
