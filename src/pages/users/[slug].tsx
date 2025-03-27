@@ -27,6 +27,7 @@ type User = {
 export default function UserDetailsPage() {
   const router = useRouter();
   const id = router.query.slug;
+  console.log(id);
 
   const [user, setUser] = useState<User | null>(null);
   const [openEditDialog, setOpenEditDialog] = useState(false);
@@ -42,7 +43,11 @@ export default function UserDetailsPage() {
   const countryOptions = useMemo(() => countryList().getData(), []);
 
   const fetchEachUser = async () => {
-    const response = await fetch(`http://localhost:3000/api/users?id=${id}`);
+    const response = await fetch(`http://localhost:3000/api/users?id=${id}`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
     if (!response.ok) return alert("No user found");
     const data = await response.json();
     setUser(data);
@@ -94,6 +99,7 @@ export default function UserDetailsPage() {
       const result = await response.json();
       setUser(result.user);
       setOpenEditDialog(false);
+      window.location.reload();
       alert("User updated successfully!");
 
       // ✅ Check if edited user is the same as the logged-in user

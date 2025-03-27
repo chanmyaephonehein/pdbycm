@@ -60,7 +60,7 @@ const Navbar = ({ route }: { route: string }) => {
           }}
         >
           <Avatar>
-            <AvatarImage src="/avatar-placeholder.png" alt="User Avatar" />
+            <AvatarImage src="/sample.jpg" alt="User Avatar" />
             <AvatarFallback>PF</AvatarFallback>
           </Avatar>
         </div>

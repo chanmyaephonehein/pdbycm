@@ -45,6 +45,7 @@ export default async function handler(
         currentRole: decoded.role,
       });
     }
+
     const { id, search } = req.query;
     console.log("Here is the query", req.query);
     try {
@@ -213,7 +214,7 @@ export default async function handler(
 
     // Optional: Check if user has a role that can send emails
     // You can modify this logic based on your specific requirements
-    const allowedRoles = ["Admin"];
+    const allowedRoles = ["Admin", "Staff"];
     if (!allowedRoles.includes(decoded.role)) {
       return res.status(403).json({
         message: "Forbidden: Insufficient permissions",
@@ -282,7 +283,7 @@ export default async function handler(
 
     // Optional: Check if user has a role that can send emails
     // You can modify this logic based on your specific requirements
-    const allowedRoles = ["Admin"];
+    const allowedRoles = ["Admin", "Staff"];
     if (!allowedRoles.includes(decoded.role)) {
       return res.status(403).json({
         message: "Forbidden: Insufficient permissions",

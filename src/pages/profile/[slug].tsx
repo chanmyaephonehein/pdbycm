@@ -61,10 +61,16 @@ export default function ProfilePage() {
 
     const decoded = decodeToken(token);
     if (!decoded?.id) return;
+    console.log(decoded);
 
     if (decoded.role === "Staff") setIsStaff(true); // ← detect if staff
 
-    fetch(`/api/users?id=${decoded.id}`)
+    fetch(`/api/users?id=${decoded.id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    })
       .then((res) => res.json())
       .then((data: User) => {
         setUser(data);
@@ -116,10 +122,12 @@ export default function ProfilePage() {
     };
 
     try {
+      const token = localStorage.getItem("token");
       const res = await fetch("/api/users", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(updatedUser),
       });
@@ -131,6 +139,7 @@ export default function ProfilePage() {
         setName(updated.name);
         const matched = countryOptions.find((c) => c.label === updated.country);
         setSelectedCountry(matched || null);
+        window.location.reload();
 
         // 🟡 Store the new token to reflect updated role
         if (token) {
@@ -168,7 +177,7 @@ export default function ProfilePage() {
         <CardContent className="space-y-6">
           <div className="flex items-center gap-4">
             <Avatar className="w-14 h-14">
-              <AvatarImage src="/avatar-placeholder.png" />
+              <AvatarImage src="/sample.jpg" />
               <AvatarFallback>
                 {user.name.slice(0, 2).toUpperCase()}
               </AvatarFallback>
