@@ -1,4 +1,4 @@
-import { generateToken } from "@/utils/jwtUtils";
+import { generateToken, verifyToken } from "@/utils/jwtUtils";
 import { PrismaClient } from "@prisma/client";
 import crypto from "crypto";
 import { NextApiRequest, NextApiResponse } from "next";
@@ -19,9 +19,31 @@ export default async function handler(
   res: NextApiResponse
 ) {
   if (req.method === "GET") {
-    const authHeader = req.headers.authorization;
-    if (!authHeader) {
-      return res.status(401).json({ message: "Authorization header missing" });
+    const token = req.headers.authorization?.split(" ")[1];
+
+    // Check if token exists
+    if (!token) {
+      return res
+        .status(401)
+        .json({ message: "Unauthorized: No token provided" });
+    }
+
+    // Verify token
+    const decoded = verifyToken(token);
+
+    // Check if token is valid
+    if (!decoded) {
+      return res.status(403).json({ message: "Invalid or expired token" });
+    }
+
+    // Optional: Check if user has a role that can send emails
+    // You can modify this logic based on your specific requirements
+    const allowedRoles = ["Admin", "Staff"];
+    if (!allowedRoles.includes(decoded.role)) {
+      return res.status(403).json({
+        message: "Forbidden: Insufficient permissions",
+        currentRole: decoded.role,
+      });
     }
     const { id, search } = req.query;
     console.log("Here is the query", req.query);
@@ -88,9 +110,31 @@ export default async function handler(
         .json({ error: "Server error", details: (error as Error).message });
     }
   } else if (req.method === "POST") {
-    const authHeader = req.headers.authorization;
-    if (!authHeader) {
-      return res.status(401).json({ message: "Authorization header missing" });
+    const token = req.headers.authorization?.split(" ")[1];
+
+    // Check if token exists
+    if (!token) {
+      return res
+        .status(401)
+        .json({ message: "Unauthorized: No token provided" });
+    }
+
+    // Verify token
+    const decoded = verifyToken(token);
+
+    // Check if token is valid
+    if (!decoded) {
+      return res.status(403).json({ message: "Invalid or expired token" });
+    }
+
+    // Optional: Check if user has a role that can send emails
+    // You can modify this logic based on your specific requirements
+    const allowedRoles = ["Admin"];
+    if (!allowedRoles.includes(decoded.role)) {
+      return res.status(403).json({
+        message: "Forbidden: Insufficient permissions",
+        currentRole: decoded.role,
+      });
     }
     const { name, email, password, role, country } = req.body;
 
@@ -150,9 +194,31 @@ export default async function handler(
 
     // return res.status(200).send({ addedUser });
   } else if (req.method === "PUT") {
-    const authHeader = req.headers.authorization;
-    if (!authHeader) {
-      return res.status(401).json({ message: "Authorization header missing" });
+    const token = req.headers.authorization?.split(" ")[1];
+
+    // Check if token exists
+    if (!token) {
+      return res
+        .status(401)
+        .json({ message: "Unauthorized: No token provided" });
+    }
+
+    // Verify token
+    const decoded = verifyToken(token);
+
+    // Check if token is valid
+    if (!decoded) {
+      return res.status(403).json({ message: "Invalid or expired token" });
+    }
+
+    // Optional: Check if user has a role that can send emails
+    // You can modify this logic based on your specific requirements
+    const allowedRoles = ["Admin"];
+    if (!allowedRoles.includes(decoded.role)) {
+      return res.status(403).json({
+        message: "Forbidden: Insufficient permissions",
+        currentRole: decoded.role,
+      });
     }
     const { id, name, role, country } = req.body;
 
@@ -197,9 +263,31 @@ export default async function handler(
       });
     }
   } else if (req.method === "DELETE") {
-    const authHeader = req.headers.authorization;
-    if (!authHeader) {
-      return res.status(401).json({ message: "Authorization header missing" });
+    const token = req.headers.authorization?.split(" ")[1];
+
+    // Check if token exists
+    if (!token) {
+      return res
+        .status(401)
+        .json({ message: "Unauthorized: No token provided" });
+    }
+
+    // Verify token
+    const decoded = verifyToken(token);
+
+    // Check if token is valid
+    if (!decoded) {
+      return res.status(403).json({ message: "Invalid or expired token" });
+    }
+
+    // Optional: Check if user has a role that can send emails
+    // You can modify this logic based on your specific requirements
+    const allowedRoles = ["Admin"];
+    if (!allowedRoles.includes(decoded.role)) {
+      return res.status(403).json({
+        message: "Forbidden: Insufficient permissions",
+        currentRole: decoded.role,
+      });
     }
     const { id } = req.query;
 

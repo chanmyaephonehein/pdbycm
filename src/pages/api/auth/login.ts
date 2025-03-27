@@ -21,10 +21,7 @@ export default async function handler(
   if (req.method !== "POST") {
     return res.status(405).json({ message: "Method Not Allowed" });
   }
-  const authHeader = req.headers.authorization;
-  if (!authHeader) {
-    return res.status(401).json({ message: "Authorization header missing" });
-  }
+
   const { email, password }: { email: string; password: string } = req.body;
 
   try {
