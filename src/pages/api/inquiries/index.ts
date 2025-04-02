@@ -1,6 +1,7 @@
 import { verifyToken } from "@/utils/jwtUtils";
 import { PrismaClient } from "@prisma/client";
 import { NextApiRequest, NextApiResponse } from "next";
+import { startOfDay, startOfWeek, startOfMonth } from "date-fns";
 
 const prisma = new PrismaClient();
 
@@ -35,7 +36,7 @@ export default async function handler(
         currentRole: decoded.role,
       });
     }
-    const { id, search } = req.query;
+    const { id, search, range } = req.query;
     console.log("Here is the query", req.query);
 
     try {
@@ -52,6 +53,49 @@ export default async function handler(
       }
 
       let inquiries;
+      let whereClause: any = {};
+
+      // Time range filter
+      if (range === "today") {
+        whereClause.createdAt = {
+          gte: startOfDay(new Date()),
+        };
+        const inquiries = await prisma.inquiries.findMany({
+          where: whereClause,
+        });
+        if (!inquiries || inquiries.length === 0) {
+          return res.status(404).json({ message: "No inquiries found" });
+        }
+
+        // ✅ Early return with filtered results
+        return res.status(200).json(inquiries);
+      } else if (range === "week") {
+        whereClause.createdAt = {
+          gte: startOfWeek(new Date(), { weekStartsOn: 1 }), // Monday
+        };
+        const inquiries = await prisma.inquiries.findMany({
+          where: whereClause,
+        });
+        if (!inquiries || inquiries.length === 0) {
+          return res.status(404).json({ message: "No inquiries found" });
+        }
+
+        // ✅ Early return with filtered results
+        return res.status(200).json(inquiries);
+      } else if (range === "month") {
+        whereClause.createdAt = {
+          gte: startOfMonth(new Date()),
+        };
+        const inquiries = await prisma.inquiries.findMany({
+          where: whereClause,
+        });
+        if (!inquiries || inquiries.length === 0) {
+          return res.status(404).json({ message: "No inquiries found" });
+        }
+
+        // ✅ Early return with filtered results
+        return res.status(200).json(inquiries);
+      }
 
       if (search) {
         inquiries = await prisma.inquiries.findMany({
@@ -69,9 +113,8 @@ export default async function handler(
             ],
           },
         });
-      } else {
-        inquiries = await prisma.inquiries.findMany();
       }
+      inquiries = await prisma.inquiries.findMany();
 
       if (!inquiries || inquiries.length === 0) {
         return res.status(404).json({ message: "No inquiries found" });

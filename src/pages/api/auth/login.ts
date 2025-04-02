@@ -43,14 +43,16 @@ export default async function handler(
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(401).json({ message: "Invalid credentials" });
+      return res
+        .status(401)
+        .json({ message: "Password is incorrect. Try again" });
     }
 
     const now = new Date();
 
     // Generate and send a verification code for 2-step authentication
-    const verificationCode = Math.floor(100000 + Math.random() * 900000); // 6-digit code
-    const expiresAt = new Date(now.getTime() + 10 * 60 * 1000); // expires in 15 minutes
+    const verificationCode = Math.floor(100000 + Math.random() * 600000); // 6-digit code
+    const expiresAt = new Date(now.getTime() + 15 * 60 * 1000); // expires in 15 minutes
 
     await prisma.user.update({
       where: { email },

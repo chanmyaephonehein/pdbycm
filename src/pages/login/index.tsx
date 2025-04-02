@@ -44,8 +44,8 @@ export default function LoginPage() {
 
         setShowSuccessDialog(true); // Open success dialog
       } else {
-        const errorMessage = await response.text();
-        alert(errorMessage);
+        const errorMessage = await response.json();
+        alert(errorMessage.message);
       }
     } catch (error) {
       console.error("Error:", error);

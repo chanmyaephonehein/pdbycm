@@ -1,7 +1,7 @@
-import { PrismaClient } from "@prisma/client";
 import { NextApiRequest, NextApiResponse } from "next";
 import { generateToken } from "@/utils/jwtUtils";
 import nodemailer from "nodemailer";
+import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 

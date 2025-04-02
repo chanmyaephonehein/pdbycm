@@ -19,18 +19,18 @@ const blogCategories = [
         title: "How AI is Transforming the Future of Work",
         description:
           "Explore how AI is reshaping the workplace and improving efficiency.",
-        image: "/sample.jpg",
+        image: "/image8.jpeg",
       },
       {
         title: "Top 5 AI Trends in 2025",
         description:
           "Discover the top AI trends that will dominate in the coming years.",
-        image: "/sample.jpg",
+        image: "/image9.png",
       },
       {
         title: "The Role of AI in Digital Employee Experience",
         description: "How AI enhances employee engagement and productivity.",
-        image: "/sample.jpg",
+        image: "/image10.png",
       },
     ],
   },
@@ -42,44 +42,19 @@ const blogCategories = [
           "How AI-Solution Helped a Retail Company Boost Sales with AI-Powered Personalization",
         description:
           "A real-world example of how AI improved sales and customer experience.",
-        image: "/sample.jpg",
+        image: "/image11.jpg",
       },
       {
         title: "Enhancing Cybersecurity with AI: A Case Study in Finance",
         description:
           "Learn how AI helps detect and prevent cyber threats in finance.",
-        image: "/sample.jpg",
+        image: "/image12.jpg",
       },
       {
         title: "Automating HR Processes with AI: A Success Story",
         description:
           "See how AI streamlined HR operations and improved hiring efficiency.",
-        image: "/sample.jpg",
-      },
-    ],
-  },
-  {
-    category: "AI Industry Trends & Insight",
-    blogs: [
-      {
-        title:
-          "Introducing Our AI-Powered Virtual Assistant: Features & Benefits",
-        description:
-          "A deep dive into the features of our latest AI-powered virtual assistant.",
-        image: "/sample.jpg",
-      },
-      {
-        title:
-          "How We Use AI to Improve Business Intelligence & Predictive Analytics",
-        description: "Understand how AI enhances data-driven decision-making.",
-        image: "/sample.jpg",
-      },
-      {
-        title:
-          "Behind the Scenes: How AI-Solution Develops AI-Based Prototypes Faster",
-        description:
-          "An inside look at our AI-based product development process.",
-        image: "/sample.jpg",
+        image: "/image13.webp",
       },
     ],
   },
@@ -96,13 +71,10 @@ export default function Blog() {
 
       {blogCategories.map((category, index) => (
         <div key={index} className="mb-12">
-          {/* Category Title */}
           <h3 className="text-xl font-semibold mb-6">{category.category}</h3>
-
-          {/* Blog Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {category.blogs.map((blog, idx) => {
-              const slug = generateSlug(blog.title); // Convert title to slug
+              const slug = generateSlug(blog.title);
               return (
                 <div
                   key={idx}
@@ -133,6 +105,59 @@ export default function Blog() {
           </div>
         </div>
       ))}
+
+      {/* Gallery Section */}
+      <div className="mt-20 px-4 sm:px-6 lg:px-8">
+        <h3 className="text-2xl font-semibold text-center mb-6">
+          AI in Action: Gallery
+        </h3>
+        <p className="text-center text-gray-600 mb-8 max-w-xl mx-auto">
+          Explore real-world AI implementation through visuals from our
+          projects, events, and partner stories.
+        </p>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {[
+            "/image1.jpg",
+            "/image2.jpg",
+            "/image3.png",
+            "/image4.jpg",
+            "/image5.png",
+            "/image6.jpg",
+            "/image7.jpeg",
+            "/image8.jpeg",
+          ].map((src, idx) => (
+            <a
+              href={src}
+              target="_blank"
+              rel="noopener noreferrer"
+              key={idx}
+              className="block"
+            >
+              <div className="relative w-full h-[180px] sm:h-[200px] md:h-[220px] overflow-hidden rounded-lg shadow-md hover:shadow-lg transition duration-300">
+                <Image
+                  src={src}
+                  alt={`Gallery image ${idx + 1}`}
+                  fill
+                  className="object-cover hover:scale-105 transition-transform duration-300"
+                />
+              </div>
+            </a>
+          ))}
+        </div>
+      </div>
+
+      {/* Contact Us CTA Section */}
+      <div className="text-center mt-24">
+        <h3 className="text-2xl font-semibold mb-2">
+          Want to explore more or collaborate with us?
+        </h3>
+        <p className="text-gray-600 max-w-xl mx-auto mb-4">
+          Whether you're looking for expert insight or want to showcase your AI
+          success story, we’d love to hear from you.
+        </p>
+        <Button onClick={() => router.push("/contactus")}>Contact Us</Button>
+      </div>
     </div>
   );
 }

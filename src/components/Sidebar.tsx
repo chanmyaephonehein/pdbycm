@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { jwtDecode } from "jwt-decode";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 interface TokenPayload {
   id: number;
@@ -44,8 +45,19 @@ const Sidebar = () => {
     role === "Admin" || (userId !== null && adminIds.includes(userId));
 
   return (
-    <div className="hidden md:flex flex-col w-64 bg-gray-100 h-screen p-4 border-r">
-      <div className="text-2xl font-bold mb-6 px-2">AI-Solution</div>
+    <div className="hidden md:flex flex-col w-64  h-screen p-4 border-r">
+      <div
+        className="flex items-center gap-3 cursor-pointer mb-8"
+        onClick={() => router.push("/")}
+      >
+        <Image
+          src="/logo.png" // your actual logo file
+          alt="AI Solution Logo"
+          width={140} // increase this
+          height={140} // and this
+          className="object-contain" // or object-cover if you want it cropped
+        />
+      </div>
 
       <nav className="flex flex-col gap-2">
         <Button variant="ghost" className="justify-start px-2" asChild>

@@ -1,6 +1,7 @@
 import { generateToken, verifyToken } from "@/utils/jwtUtils";
 import { PrismaClient } from "@prisma/client";
 import crypto from "crypto";
+import { jwtDecode } from "jwt-decode";
 import { NextApiRequest, NextApiResponse } from "next";
 import nodemailer from "nodemailer";
 
@@ -29,7 +30,7 @@ export default async function handler(
     }
 
     // Verify token
-    const decoded = verifyToken(token);
+    const decoded = jwtDecode(token);
 
     // Check if token is valid
     if (!decoded) {
@@ -184,16 +185,6 @@ export default async function handler(
     return res
       .status(200)
       .send({ message: "Verification email sent. Please check your email." });
-
-    // /////////
-    // const hashedPassword = await bcrypt.hash(password, 10);
-
-    // console.log(hashedPassword);
-    // const addedUser = await prisma.user.create({
-    //   data: { email, name, password: hashedPassword, role, country },
-    // });
-
-    // return res.status(200).send({ addedUser });
   } else if (req.method === "PUT") {
     const token = req.headers.authorization?.split(" ")[1];
 
