@@ -1,4 +1,6 @@
-import { useState } from "react";
+"use client";
+
+import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -6,9 +8,16 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import Select from "react-select";
 import countryList from "react-select-country-list";
+import PhoneInput, {
+  isValidPhoneNumber,
+  getCountryCallingCode,
+} from "react-phone-number-input";
+import "react-phone-number-input/style.css";
 
 export default function Contact() {
-  const [selectedCountry, setSelectedCountry] = useState(null);
+  const [selectedCountry, setSelectedCountry] = useState<any>(null);
+  const [submitting, setSubmitting] = useState(false);
+
   const [newInquiry, setNewInquiry] = useState({
     name: "",
     email: "",
@@ -19,13 +28,33 @@ export default function Contact() {
     jobDetails: "",
   });
 
+  const [errors, setErrors] = useState<{ email?: string; phone?: string }>({});
   const countries = countryList().getData();
 
   const handleInputChange = (field: string, value: string) => {
     setNewInquiry((prev) => ({ ...prev, [field]: value }));
   };
 
+  const validate = () => {
+    const newErrors: { email?: string; phone?: string } = {};
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailRegex.test(newInquiry.email)) {
+      newErrors.email = "Invalid email address.";
+    }
+
+    if (!isValidPhoneNumber(newInquiry.phone || "")) {
+      newErrors.phone = "Invalid phone number.";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleCreateInquiry = async () => {
+    if (!validate()) return;
+    setSubmitting(true);
+
     try {
       const response = await fetch(`http://localhost:3000/api/inquiries`, {
         method: "POST",
@@ -33,8 +62,12 @@ export default function Contact() {
         body: JSON.stringify(newInquiry),
       });
 
-      if (!response.ok) return alert("Failed to create inquiry");
-      // throw new Error("Failed to create inquiry");
+      if (!response.ok) {
+        alert("Failed to create inquiry");
+        setSubmitting(false);
+        return;
+      }
+
       setNewInquiry({
         name: "",
         email: "",
@@ -49,13 +82,16 @@ export default function Contact() {
       alert("Inquiry submitted successfully!");
     } catch (error) {
       console.error("Error creating inquiry:", error);
+      alert("Something went wrong!");
+    } finally {
+      setSubmitting(false);
     }
   };
 
   return (
     <div className="container mx-auto px-6 py-12">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-        {/* Left Section - Contact Info */}
+        {/* Left Section */}
         <div>
           <h2 className="text-3xl font-semibold mb-4">Contact Us</h2>
           <p className="text-gray-600">
@@ -65,11 +101,10 @@ export default function Contact() {
           </p>
         </div>
 
-        {/* Right Section - Contact Form */}
+        {/* Right Section */}
         <Card className="shadow-lg p-6">
           <CardContent>
             <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
-              {/* Name & Phone */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label>Name</Label>
@@ -82,16 +117,21 @@ export default function Contact() {
                 </div>
                 <div>
                   <Label>Phone</Label>
-                  <Input
-                    type="tel"
-                    placeholder="Enter your phone"
+                  <PhoneInput
+                    placeholder="Enter phone number"
                     value={newInquiry.phone}
-                    onChange={(e) => handleInputChange("phone", e.target.value)}
+                    onChange={(value) =>
+                      handleInputChange("phone", value || "")
+                    }
+                    country={selectedCountry?.value || undefined}
+                    className="w-full border border-gray-300 p-2 rounded-md text-sm"
                   />
+                  {errors.phone && (
+                    <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
+                  )}
                 </div>
               </div>
 
-              {/* Email */}
               <div>
                 <Label>Email</Label>
                 <Input
@@ -100,9 +140,11 @@ export default function Contact() {
                   value={newInquiry.email}
                   onChange={(e) => handleInputChange("email", e.target.value)}
                 />
+                {errors.email && (
+                  <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+                )}
               </div>
 
-              {/* Company Name & Country Dropdown */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label>Company Name</Label>
@@ -130,7 +172,6 @@ export default function Contact() {
                 </div>
               </div>
 
-              {/* Job Title */}
               <div>
                 <Label>Job Title</Label>
                 <Input
@@ -143,7 +184,6 @@ export default function Contact() {
                 />
               </div>
 
-              {/* Job Details */}
               <div>
                 <Label>Job Details</Label>
                 <Textarea
@@ -156,9 +196,12 @@ export default function Contact() {
                 />
               </div>
 
-              {/* Submit Button */}
-              <Button className="w-full" onClick={handleCreateInquiry}>
-                Submit
+              <Button
+                className="w-full"
+                onClick={handleCreateInquiry}
+                disabled={submitting}
+              >
+                {submitting ? "Submitting..." : "Submit"}
               </Button>
             </form>
           </CardContent>
