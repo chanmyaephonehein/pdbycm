@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Menu } from "lucide-react";
+import { Menu, User } from "lucide-react"; // ✅ import the User icon
 import Sidebar from "./Sidebar";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"; // ✅ no need for AvatarImage
 
 // Helper to decode JWT
 const decodeToken = (token: string) => {
@@ -60,8 +60,9 @@ const Navbar = ({ route }: { route: string }) => {
           }}
         >
           <Avatar>
-            <AvatarImage src="/sample.jpg" alt="User Avatar" />
-            <AvatarFallback>PF</AvatarFallback>
+            <AvatarFallback>
+              <User size={20} />
+            </AvatarFallback>
           </Avatar>
         </div>
         <Button

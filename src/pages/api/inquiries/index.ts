@@ -128,32 +128,6 @@ export default async function handler(
       });
     }
   } else if (req.method === "POST") {
-    const token = req.headers.authorization?.split(" ")[1];
-
-    // Check if token exists
-    if (!token) {
-      return res
-        .status(401)
-        .json({ message: "Unauthorized: No token provided" });
-    }
-
-    // Verify token
-    const decoded = verifyToken(token);
-
-    // Check if token is valid
-    if (!decoded) {
-      return res.status(403).json({ message: "Invalid or expired token" });
-    }
-
-    // Optional: Check if user has a role that can send emails
-    // You can modify this logic based on your specific requirements
-    const allowedRoles = ["Admin", "Staff"];
-    if (!allowedRoles.includes(decoded.role)) {
-      return res.status(403).json({
-        message: "Forbidden: Insufficient permissions",
-        currentRole: decoded.role,
-      });
-    }
     const { name, email, phone, companyName, country, jobTitle, jobDetails } =
       req.body;
 

@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Select as UiSelect,
   SelectContent,
@@ -23,8 +23,9 @@ import {
 } from "@/components/ui/select";
 import Select from "react-select";
 import countryList from "react-select-country-list";
+import { User } from "lucide-react";
 
-type User = {
+type UserType = {
   id: number;
   name: string;
   email: string;
@@ -46,14 +47,14 @@ export default function ProfilePage() {
   const router = useRouter();
   const countryOptions = useMemo(() => countryList().getData(), []);
 
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<UserType | null>(null);
   const [name, setName] = useState("");
   const [role, setRole] = useState("");
   const [selectedCountry, setSelectedCountry] = useState<any>(null);
   const [resetCountdown, setResetCountdown] = useState(0);
   const [showResetDialog, setShowResetDialog] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [isStaff, setIsStaff] = useState(false); // <- NEW
+  const [isStaff, setIsStaff] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -61,9 +62,8 @@ export default function ProfilePage() {
 
     const decoded = decodeToken(token);
     if (!decoded?.id) return;
-    console.log(decoded);
 
-    if (decoded.role === "Staff") setIsStaff(true); // ← detect if staff
+    if (decoded.role === "Staff") setIsStaff(true);
 
     fetch(`/api/users?id=${decoded.id}`, {
       headers: {
@@ -72,7 +72,7 @@ export default function ProfilePage() {
       },
     })
       .then((res) => res.json())
-      .then((data: User) => {
+      .then((data: UserType) => {
         setUser(data);
         setName(data.name);
         setRole(data.role);
@@ -141,7 +141,6 @@ export default function ProfilePage() {
         setSelectedCountry(matched || null);
         window.location.reload();
 
-        // 🟡 Store the new token to reflect updated role
         if (token) {
           localStorage.setItem("token", token);
           alert("Profile updated and session refreshed.");
@@ -164,7 +163,7 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen flex flex-col items-center p-6 bg-white">
       <div className="w-full max-w-3xl mb-4 flex justify-between items-center">
-        <Button variant="secondary" onClick={() => router.push("/dashboard")}>
+        <Button variant="outline" onClick={() => router.push("/dashboard")}>
           Back to Dashboard
         </Button>
         <Button onClick={handleSaveChanges}>Save Changes</Button>
@@ -177,9 +176,8 @@ export default function ProfilePage() {
         <CardContent className="space-y-6">
           <div className="flex items-center gap-4">
             <Avatar className="w-14 h-14">
-              <AvatarImage src="/sample.jpg" />
               <AvatarFallback>
-                {user.name.slice(0, 2).toUpperCase()}
+                <User className="w-6 h-6 text-muted-foreground" />
               </AvatarFallback>
             </Avatar>
             <div>

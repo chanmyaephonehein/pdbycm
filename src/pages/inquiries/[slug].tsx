@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Mail, ArrowLeft, Info } from "lucide-react";
 
 interface Inquiry {
   id: number;
@@ -24,9 +25,9 @@ interface Inquiry {
   jobTitle: string;
   jobDetails: string;
   status: string;
+  createdAt: string;
 }
 
-// ✅ Ensure status options match the enum from Inquiry List
 const statusOptions = [
   { label: "Pending", value: "PENDING" },
   { label: "In Progress", value: "IN_PROGRESS" },
@@ -53,17 +54,18 @@ const InquiryDetail = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`, // Add authorization header
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
         body: JSON.stringify({
           to: inquiry.email,
-          objective: objective,
-          response: response,
+          objective,
+          response,
           inquiryId: inquiry.id,
         }),
       });
 
       if (!res.ok) throw new Error("Failed to send email");
+
       alert("Email sent successfully!");
       setObjective("");
       setResponse("");
@@ -75,7 +77,6 @@ const InquiryDetail = () => {
     }
   };
 
-  // ✅ Fetch from DB when slug is ready
   useEffect(() => {
     const fetchInquiry = async (inquiryId: string) => {
       try {
@@ -91,7 +92,7 @@ const InquiryDetail = () => {
 
         const data: Inquiry = await res.json();
         setInquiry(data);
-        setStatus(data.status); // ✅ status directly from DB
+        setStatus(data.status);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Error occurred");
       } finally {
@@ -105,10 +106,9 @@ const InquiryDetail = () => {
     }
   }, [router.query.slug]);
 
-  // ✅ Update status on dropdown change
   const handleStatusChange = async (newStatus: string) => {
     if (!inquiry) return;
-    setStatus(newStatus); // optimistic update
+    setStatus(newStatus);
 
     try {
       const res = await fetch(`http://localhost:3000/api/inquiries`, {
@@ -137,10 +137,13 @@ const InquiryDetail = () => {
 
   return (
     <div className="p-10 space-y-6">
-      <div className="flex justify-between items-center">
+      {/* Navigation + Status */}
+      <div className="flex justify-between items-center mb-6">
         <Button variant="outline" onClick={() => router.push("/inquiries")}>
+          <ArrowLeft className="w-4 h-4 mr-2" />
           Back
         </Button>
+
         <div className="w-64">
           <Label className="mb-1 block">Status</Label>
           <Select value={status} onValueChange={handleStatusChange}>
@@ -158,6 +161,29 @@ const InquiryDetail = () => {
         </div>
       </div>
 
+      {/* Summary Header with CreatedAt */}
+      <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+        <div className="flex items-center gap-4">
+          <Info className="text-blue-500 w-6 h-6" />
+          <div>
+            <p className="text-lg font-semibold">{inquiry.name}</p>
+            <p className="text-sm text-gray-600">
+              {inquiry.jobTitle} at {inquiry.companyName} ({inquiry.country})
+            </p>
+          </div>
+        </div>
+        <div className="text-sm text-gray-500 mt-2 md:mt-0">
+          Created at:{" "}
+          <span className="font-medium text-gray-700">
+            {new Date(inquiry.createdAt).toLocaleString("en-US", {
+              dateStyle: "medium",
+              timeStyle: "short",
+            })}
+          </span>
+        </div>
+      </div>
+
+      {/* Inquiry Details Section */}
       <div className="bg-white p-6 rounded-lg shadow-md space-y-6">
         <h2 className="text-xl font-semibold">Inquiry Details</h2>
 
@@ -192,8 +218,12 @@ const InquiryDetail = () => {
           </div>
         </div>
 
+        {/* Email Response Form */}
         <div className="space-y-4 mt-6">
-          {/* Objective Input */}
+          <h3 className="text-lg font-semibold flex items-center">
+            <Mail className="w-5 h-5 mr-2" /> Send Email Response
+          </h3>
+
           <Label>Objective</Label>
           <Input
             placeholder="Enter objective"
@@ -201,7 +231,6 @@ const InquiryDetail = () => {
             onChange={(e) => setObjective(e.target.value)}
           />
 
-          {/* Response Input */}
           <Label>Your Response</Label>
           <Textarea
             placeholder="Enter your response"

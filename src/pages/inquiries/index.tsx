@@ -22,6 +22,14 @@ import { Label } from "@/components/ui/label";
 import Select from "react-select";
 import { useRouter } from "next/router";
 import { Filter } from "lucide-react";
+import {
+  startOfDay,
+  endOfDay,
+  startOfWeek,
+  startOfMonth,
+  subHours,
+} from "date-fns";
+import { utcToZonedTime } from "date-fns-tz";
 
 const statusOptions = [
   { label: "PENDING", value: "PENDING" },
@@ -57,15 +65,13 @@ const Inquiries = () => {
   const [tempFilterCountry, setTempFilterCountry] = useState<
     string | undefined
   >(undefined);
-  const [showRecentOnly, setShowRecentOnly] = useState(false);
+  const [timeFilter, setTimeFilter] = useState("all");
 
   const router = useRouter();
 
   const fetchInquiries = async (searchTerm = "") => {
     try {
       let query = "";
-
-      // If there's a search term, append it to the query
       if (searchTerm) {
         query = `?search=${encodeURIComponent(searchTerm)}`;
       }
@@ -113,7 +119,6 @@ const Inquiries = () => {
   };
 
   const handleSearch = () => {
-    // Update current search term and trigger search
     if (searchTerm.trim()) {
       setCurrentSearchTerm(searchTerm);
       fetchInquiries(searchTerm);
@@ -121,50 +126,95 @@ const Inquiries = () => {
   };
 
   const handleReset = () => {
-    // Reset search term and current search term
     setSearchTerm("");
     setCurrentSearchTerm("");
-
-    // Fetch all inquiries
     fetchInquiries();
   };
 
+  const handleExportCSV = () => {
+    const headers = [
+      "ID",
+      "Name",
+      "Email",
+      "Phone",
+      "Country",
+      "Company",
+      "Job Title",
+      "Job Details",
+      "Status",
+      "Created At",
+    ];
+
+    const rows = filteredInquiries.map((inq) => [
+      inq.id,
+      inq.name,
+      inq.email,
+      inq.phone,
+      inq.country,
+      inq.companyName,
+      inq.jobTitle,
+      inq.jobDetails,
+      inq.status,
+      new Date(inq.createdAt).toLocaleString(),
+    ]);
+
+    const csvContent =
+      "data:text/csv;charset=utf-8," +
+      [headers, ...rows]
+        .map((row) => row.map((cell) => `"${cell}"`).join(","))
+        .join("\n");
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "inquiries_export.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   useEffect(() => {
-    // Fetch all inquiries on initial load
     fetchInquiries("");
   }, []);
 
   const filteredInquiries = useMemo(() => {
-    const now = Date.now();
+    const now = new Date();
 
-    return inquiries.filter((inq) => {
-      const createdAt = new Date(inq.createdAt).getTime();
-      const isRecent = now - createdAt <= 3 * 60 * 60 * 1000; // last 3 hours
+    return inquiries
+      .filter((inq) => {
+        const created = new Date(inq.createdAt);
 
-      // Search across multiple fields
-      const matchesSearch =
-        !currentSearchTerm ||
-        inq.name.toLowerCase().includes(currentSearchTerm.toLowerCase()) ||
-        inq.email.toLowerCase().includes(currentSearchTerm.toLowerCase()) ||
-        inq.companyName
-          .toLowerCase()
-          .includes(currentSearchTerm.toLowerCase()) ||
-        inq.country.toLowerCase().includes(currentSearchTerm.toLowerCase());
+        const matchesTimeFilter =
+          timeFilter === "all" ||
+          (timeFilter === "3h" && created >= subHours(now, 3)) ||
+          (timeFilter === "today" &&
+            created >= startOfDay(now) &&
+            created <= endOfDay(now)) ||
+          (timeFilter === "week" && created >= startOfWeek(now)) ||
+          (timeFilter === "month" && created >= startOfMonth(now));
 
-      return (
-        matchesSearch &&
-        (filterStatuses.length === 0 || filterStatuses.includes(inq.status)) &&
-        (!filterCountry || inq.country === filterCountry) &&
-        (!showRecentOnly || isRecent)
-      );
-    });
-  }, [
-    inquiries,
-    currentSearchTerm,
-    filterStatuses,
-    filterCountry,
-    showRecentOnly,
-  ]);
+        const matchesSearch =
+          !currentSearchTerm ||
+          inq.name.toLowerCase().includes(currentSearchTerm.toLowerCase()) ||
+          inq.email.toLowerCase().includes(currentSearchTerm.toLowerCase()) ||
+          inq.companyName
+            .toLowerCase()
+            .includes(currentSearchTerm.toLowerCase()) ||
+          inq.country.toLowerCase().includes(currentSearchTerm.toLowerCase());
+
+        return (
+          matchesTimeFilter &&
+          matchesSearch &&
+          (filterStatuses.length === 0 ||
+            filterStatuses.includes(inq.status)) &&
+          (!filterCountry || inq.country === filterCountry)
+        );
+      })
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      ); // sort by newest
+  }, [inquiries, currentSearchTerm, filterStatuses, filterCountry, timeFilter]);
 
   const uniqueCountries = Array.from(
     new Set(inquiries.map((inq) => inq.country))
@@ -174,23 +224,18 @@ const Inquiries = () => {
     <div className="w-full p-4">
       <div className="flex flex-wrap justify-between gap-4 mb-4">
         <div className="flex gap-2 w-full max-w-2xl">
-          {" "}
-          {/* Increased width */}
           <Input
             placeholder="Search by name, email, company, or country"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="flex-grow" // Make input take available space
+            className="flex-grow"
             onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                handleSearch();
-              }
+              if (e.key === "Enter") handleSearch();
             }}
           />
           <Button onClick={handleSearch} variant="outline">
             Search
           </Button>
-          {/* Add a reset button */}
           {currentSearchTerm && (
             <Button onClick={handleReset} variant="secondary">
               Reset
@@ -199,6 +244,10 @@ const Inquiries = () => {
         </div>
 
         <div className="flex gap-2 flex-wrap">
+          <Button variant="outline" onClick={handleExportCSV}>
+            Export CSV
+          </Button>
+
           <Button
             variant="outline"
             onClick={() => {
@@ -214,17 +263,20 @@ const Inquiries = () => {
           >
             <Filter className="w-4 h-4 mr-2" /> Filter Options
           </Button>
-
-          <Button
-            variant={showRecentOnly ? "default" : "outline"}
-            onClick={() => setShowRecentOnly((prev) => !prev)}
+          <select
+            value={timeFilter}
+            onChange={(e) => setTimeFilter(e.target.value)}
+            className="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700"
           >
-            {showRecentOnly ? "Showing Recent" : "Recent (Last 3h)"}
-          </Button>
+            <option value="all">All</option>
+            <option value="3h">Recent (3h)</option>
+            <option value="today">Today</option>
+            <option value="week">This Week</option>
+            <option value="month">This Month</option>
+          </select>
         </div>
       </div>
 
-      {/* Filter Dialog */}
       <Dialog open={isFilterDialogOpen} onOpenChange={setIsFilterDialogOpen}>
         <DialogContent className="sm:max-w-sm">
           <DialogTitle>Filter Inquiries</DialogTitle>
@@ -236,9 +288,7 @@ const Inquiries = () => {
                 isMulti
                 options={statusOptions}
                 value={tempFilterStatuses}
-                onChange={(selected) => {
-                  setTempFilterStatuses(selected);
-                }}
+                onChange={(selected) => setTempFilterStatuses(selected)}
                 className="text-black"
               />
             </div>
@@ -274,7 +324,9 @@ const Inquiries = () => {
           </div>
         </DialogContent>
       </Dialog>
-
+      <p className="text-sm text-muted-foreground mb-2">
+        Showing inquiries sorted by newest time — latest ones appear at the top.
+      </p>
       <div className="rounded-md border overflow-x-auto">
         <Table>
           <TableHeader>
@@ -283,6 +335,7 @@ const Inquiries = () => {
               <TableHead>Name</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Country</TableHead>
+              <TableHead>Date & Time</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
@@ -295,6 +348,15 @@ const Inquiries = () => {
                   <TableCell>{inq.name}</TableCell>
                   <TableCell>{inq.email}</TableCell>
                   <TableCell>{inq.country}</TableCell>
+                  <TableCell>
+                    {new Date(inq.createdAt).toLocaleString(undefined, {
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -318,9 +380,7 @@ const Inquiries = () => {
                     <Button
                       variant="outline"
                       onClick={() =>
-                        router.push({
-                          pathname: `/inquiries/${inq.id}`,
-                        })
+                        router.push({ pathname: `/inquiries/${inq.id}` })
                       }
                     >
                       View
