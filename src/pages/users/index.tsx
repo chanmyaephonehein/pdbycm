@@ -46,6 +46,33 @@ export type User = {
   country: string;
 };
 
+const getPasswordStrength = (password: string): string => {
+  if (password.length < 8) return "Poor";
+  const hasUpper = /[A-Z]/.test(password);
+  const hasLower = /[a-z]/.test(password);
+  const hasDigit = /[0-9]/.test(password);
+  const hasSymbol = /[\W_]/.test(password);
+  const passed = [hasUpper, hasLower, hasDigit, hasSymbol].filter(
+    Boolean
+  ).length;
+
+  if (passed === 4) return "Strong";
+  if (passed === 2 || passed === 3) return "Moderate";
+  return "Poor";
+};
+
+const getPasswordStrengthColor = (strength: string) => {
+  switch (strength) {
+    case "Strong":
+      return "bg-green-500";
+    case "Moderate":
+      return "bg-yellow-500";
+    case "Poor":
+    default:
+      return "bg-red-500";
+  }
+};
+
 const UserManagement: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -57,6 +84,7 @@ const UserManagement: React.FC = () => {
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
   const [passwordMismatch, setPasswordMismatch] = useState(false);
+  const [creating, setCreating] = useState(false);
   const [filterRole, setFilterRole] = useState<string | undefined>(undefined);
   const [filterCountry, setFilterCountry] = useState<string | undefined>(
     undefined
@@ -67,13 +95,12 @@ const UserManagement: React.FC = () => {
   const [tempFilterCountry, setTempFilterCountry] = useState<
     string | undefined
   >(undefined);
-
-  // Enhanced search states
   const [searchTerm, setSearchTerm] = useState("");
   const [currentSearchTerm, setCurrentSearchTerm] = useState("");
-
-  const router = useRouter();
-
+  const [selectedCountry, setSelectedCountry] = useState<{
+    value: string;
+    label: string;
+  } | null>(null);
   const [newUser, setNewUser] = useState({
     name: "",
     email: "",
@@ -83,20 +110,11 @@ const UserManagement: React.FC = () => {
     country: "",
   });
 
-  const [selectedCountry, setSelectedCountry] = useState<{
-    value: string;
-    label: string;
-  } | null>(null);
+  const router = useRouter();
 
   const fetchUsers = async (searchTerm = "") => {
     try {
-      let query = "";
-
-      // If there's a search term, append it to the query
-      if (searchTerm) {
-        query = `?search=${encodeURIComponent(searchTerm)}`;
-      }
-
+      let query = searchTerm ? `?search=${encodeURIComponent(searchTerm)}` : "";
       const token = localStorage.getItem("token");
       const response = await fetch(`http://localhost:3000/api/users${query}`, {
         headers: {
@@ -105,19 +123,16 @@ const UserManagement: React.FC = () => {
       });
       const data = await response.json();
 
-      if (!response.ok) {
-        alert(data.message || "Error fetching users. Please try again.");
-        return;
-      }
+      if (!response.ok) return alert(data.message || "Error fetching users.");
 
       if (data.length === 0) {
         alert("No users found for the search criteria.");
       } else {
-        setUsers(data.slice(0, 100)); // Limit the data for performance
+        setUsers(data.slice(0, 100));
       }
     } catch (error) {
       console.error("Error fetching users:", error);
-      alert("An error occurred while fetching users. Please try again.");
+      alert("An error occurred while fetching users.");
     }
   };
 
@@ -125,18 +140,18 @@ const UserManagement: React.FC = () => {
     try {
       const payload = token.split(".")[1];
       return JSON.parse(atob(payload));
-    } catch (error) {
+    } catch {
       return null;
     }
   };
 
   useEffect(() => {
-    const token = localStorage.getItem("token"); // Assuming the token is stored in localStorage
+    const token = localStorage.getItem("token");
     if (token) {
       const decoded = decodeToken(token);
-      if (decoded && decoded.role === "Staff") {
+      if (decoded?.role === "Staff") {
         alert("You do not have permission to access this page.");
-        router.push("/dashboard"); // Redirect to an unauthorized page
+        router.push("/dashboard");
       }
     }
   }, []);
@@ -150,6 +165,7 @@ const UserManagement: React.FC = () => {
       !newUser.name ||
       !newUser.email ||
       !newUser.password ||
+      !newUser.confirmPassword ||
       !newUser.role ||
       !newUser.country
     ) {
@@ -157,11 +173,24 @@ const UserManagement: React.FC = () => {
       return;
     }
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(newUser.email)) {
+      alert("Please enter a valid email address.");
+      return;
+    }
+
+    if (newUser.password.length < 8) {
+      alert("Password must be at least 8 characters long.");
+      return;
+    }
+
     if (newUser.password !== newUser.confirmPassword) {
       setPasswordMismatch(true);
       return;
     }
+
     setPasswordMismatch(false);
+    setCreating(true);
 
     const token = localStorage.getItem("token");
     const response = await fetch("http://localhost:3000/api/users", {
@@ -172,11 +201,13 @@ const UserManagement: React.FC = () => {
       },
       body: JSON.stringify(newUser),
     });
+
     const message = await response.json();
+    setCreating(false);
 
     if (!response.ok) return alert(message.message);
-
     alert(message.message);
+
     setIsDialogOpen(false);
     setNewUser({
       name: "",
@@ -187,11 +218,10 @@ const UserManagement: React.FC = () => {
       country: "",
     });
     setSelectedCountry(null);
+    fetchUsers();
   };
 
-  // Enhanced search functionality
   const handleSearch = () => {
-    // Update current search term and trigger search
     if (searchTerm.trim()) {
       setCurrentSearchTerm(searchTerm);
       fetchUsers(searchTerm);
@@ -199,11 +229,8 @@ const UserManagement: React.FC = () => {
   };
 
   const handleReset = () => {
-    // Reset search term and current search term
     setSearchTerm("");
     setCurrentSearchTerm("");
-
-    // Fetch all users
     fetchUsers();
   };
 
@@ -251,12 +278,7 @@ const UserManagement: React.FC = () => {
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
-    state: {
-      sorting,
-      columnFilters,
-      columnVisibility,
-      rowSelection,
-    },
+    state: { sorting, columnFilters, columnVisibility, rowSelection },
   });
 
   const roleOptions = Array.from(new Set(users.map((u) => u.role)));
@@ -264,32 +286,24 @@ const UserManagement: React.FC = () => {
 
   return (
     <div className="w-full p-4">
+      {/* Search & Actions */}
       <div className="flex flex-wrap justify-between gap-4 mb-4">
         <div className="flex gap-2 w-full max-w-2xl">
           <Input
             placeholder="Search by name, email, role, or country"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="flex-grow"
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                handleSearch();
-              }
-            }}
+            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
           />
-
           <Button onClick={handleSearch} variant="outline">
             Search
           </Button>
-
-          {/* Reset button appears after search */}
           {currentSearchTerm && (
             <Button onClick={handleReset} variant="secondary">
               Reset
             </Button>
           )}
         </div>
-
         <div className="flex flex-wrap gap-2 items-center">
           <Button
             variant="outline"
@@ -301,14 +315,10 @@ const UserManagement: React.FC = () => {
           >
             <Filter className="w-4 h-4 mr-2" /> Filter Options
           </Button>
-
-          <Button variant="default" onClick={() => setIsDialogOpen(true)}>
-            + Add User
-          </Button>
+          <Button onClick={() => setIsDialogOpen(true)}>+ Add User</Button>
         </div>
       </div>
 
-      {/* Rest of the component remains the same (Dialogs, Table, etc.) */}
       {/* Filter Dialog */}
       <Dialog open={isFilterDialogOpen} onOpenChange={setIsFilterDialogOpen}>
         <DialogContent className="sm:max-w-sm">
@@ -348,21 +358,21 @@ const UserManagement: React.FC = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="__all__">All</SelectItem>
-                  {countryOptions.map((country) => (
-                    <SelectItem key={country} value={country}>
-                      {country}
+                  {countryOptions.map((c) => (
+                    <SelectItem key={c} value={c}>
+                      {c}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </UiSelect>
             </div>
             <Button
+              className="mt-2"
               onClick={() => {
                 setFilterRole(tempFilterRole);
                 setFilterCountry(tempFilterCountry);
                 setIsFilterDialogOpen(false);
               }}
-              className="mt-2"
             >
               Apply Filters
             </Button>
@@ -384,6 +394,8 @@ const UserManagement: React.FC = () => {
             value={newUser.email}
             onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
           />
+
+          {/* Password Field with Strength Indicator */}
           <div className="relative">
             <Input
               type={passwordVisible ? "text" : "password"}
@@ -394,13 +406,50 @@ const UserManagement: React.FC = () => {
               }
             />
             <button
-              type="button"
               className="absolute right-3 top-3"
               onClick={() => setPasswordVisible(!passwordVisible)}
+              type="button"
             >
               {passwordVisible ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
+            <div className="mt-2 space-y-1">
+              <div className="w-full h-2 rounded-full bg-gray-200">
+                <div
+                  className={`h-2 rounded-full ${getPasswordStrengthColor(
+                    getPasswordStrength(newUser.password)
+                  )}`}
+                  style={{
+                    width:
+                      getPasswordStrength(newUser.password) === "Poor"
+                        ? "33%"
+                        : getPasswordStrength(newUser.password) === "Moderate"
+                        ? "66%"
+                        : "100%",
+                  }}
+                ></div>
+              </div>
+              <p className="text-sm">
+                Strength:{" "}
+                <span
+                  className={
+                    getPasswordStrength(newUser.password) === "Poor"
+                      ? "text-red-500"
+                      : getPasswordStrength(newUser.password) === "Moderate"
+                      ? "text-yellow-500"
+                      : "text-green-600"
+                  }
+                >
+                  {getPasswordStrength(newUser.password)}
+                </span>
+              </p>
+              <p className="text-xs text-gray-600">
+                Use at least 8 characters with uppercase, lowercase, number, and
+                special character.
+              </p>
+            </div>
           </div>
+
+          {/* Confirm Password Field */}
           <div className="relative">
             <Input
               type={confirmPasswordVisible ? "text" : "password"}
@@ -411,9 +460,9 @@ const UserManagement: React.FC = () => {
               }
             />
             <button
-              type="button"
               className="absolute right-3 top-3"
               onClick={() => setConfirmPasswordVisible(!confirmPasswordVisible)}
+              type="button"
             >
               {confirmPasswordVisible ? (
                 <EyeOff size={18} />
@@ -425,6 +474,8 @@ const UserManagement: React.FC = () => {
           {passwordMismatch && (
             <p className="text-red-500 text-sm">Passwords do not match</p>
           )}
+
+          {/* Role & Country */}
           <UiSelect
             onValueChange={(value) => setNewUser({ ...newUser, role: value })}
           >
@@ -438,16 +489,18 @@ const UserManagement: React.FC = () => {
           </UiSelect>
           <Label>Country</Label>
           <Select
-            options={countryList().getData()} // ✅ Dynamically loads all countries
+            options={countryList().getData()}
             value={selectedCountry}
             onChange={(selected) => {
               setSelectedCountry(selected);
-              setNewUser({ ...newUser, country: selected?.label || "" }); // ✅ Correctly updates the country
+              setNewUser({ ...newUser, country: selected?.label || "" });
             }}
             placeholder="Select a country"
             className="w-full text-black"
           />
-          <Button onClick={handleCreateUser}>Create</Button>
+          <Button onClick={handleCreateUser} disabled={creating}>
+            {creating ? "Creating..." : "Create"}
+          </Button>
         </DialogContent>
       </Dialog>
 

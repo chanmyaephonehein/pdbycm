@@ -55,6 +55,7 @@ export default function ProfilePage() {
   const [showResetDialog, setShowResetDialog] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isStaff, setIsStaff] = useState(false);
+  const [isSending, setIsSending] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -254,8 +255,16 @@ export default function ProfilePage() {
           </DialogHeader>
 
           {resetCountdown === 0 ? (
-            <Button className="w-full mt-4" onClick={sendResetEmail}>
-              Send Reset Link
+            <Button
+              className="w-full mt-4"
+              onClick={async () => {
+                setIsSending(true);
+                await sendResetEmail();
+                setIsSending(false);
+              }}
+              disabled={isSending}
+            >
+              {isSending ? "Sending..." : "Send Reset Link"}
             </Button>
           ) : (
             <p className="text-center text-blue-600 font-semibold mt-4">

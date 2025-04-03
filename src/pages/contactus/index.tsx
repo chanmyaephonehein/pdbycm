@@ -59,9 +59,9 @@ export default function Contact() {
         <div>
           <h2 className="text-3xl font-semibold mb-4">Contact Us</h2>
           <p className="text-gray-600">
-            Lorem Ipsum is simply dummy text of the printing and typesetting
-            industry. Lorem Ipsum has been the industry’s standard dummy text
-            ever since the 1500s.
+            We'd love to hear from you. Whether you have a question about our
+            solutions, need assistance, or just want to give feedback — our team
+            is ready to help.
           </p>
         </div>
 

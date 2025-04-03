@@ -1,3 +1,4 @@
+// Sidebar.tsx
 "use client";
 
 import Link from "next/link";
@@ -15,18 +16,22 @@ interface TokenPayload {
   exp: number;
 }
 
-const Sidebar = () => {
+interface SidebarProps {
+  inDrawer?: boolean;
+  onNavigate?: () => void; // 🔑 NEW prop
+}
+
+const Sidebar = ({ inDrawer = false, onNavigate }: SidebarProps) => {
   const [role, setRole] = useState<string | null>(null);
   const [userId, setUserId] = useState<number | null>(null);
   const router = useRouter();
 
-  const adminIds = [1, 2, 1001]; // Example of known Admin IDs who always get access
+  const adminIds = [1, 2, 1001];
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-
     if (!token || token === "undefined") {
-      router.push("/login"); // Not logged in → redirect to login
+      router.push("/login");
       return;
     }
 
@@ -44,32 +49,48 @@ const Sidebar = () => {
   const canAccessUserManagement =
     role === "Admin" || (userId !== null && adminIds.includes(userId));
 
+  const containerClass = inDrawer
+    ? "flex flex-col w-full h-full p-4"
+    : "hidden md:flex flex-col w-64 h-screen p-4 border-r";
+
   return (
-    <div className="hidden md:flex flex-col w-64  h-screen p-4 border-r">
+    <div className={containerClass}>
       <div
         className="flex items-center gap-3 cursor-pointer mb-8"
-        onClick={() => router.push("/")}
+        onClick={() => {
+          onNavigate?.();
+          router.push("/");
+        }}
       >
-        <Image
-          src="/logo.png" // your actual logo file
-          alt="AI Solution Logo"
-          width={140} // increase this
-          height={140} // and this
-          className="object-contain" // or object-cover if you want it cropped
-        />
+        <Image src="/logo.png" alt="Logo" width={140} height={140} />
       </div>
 
       <nav className="flex flex-col gap-2">
-        <Button variant="ghost" className="justify-start px-2" asChild>
+        <Button
+          variant="ghost"
+          className="justify-start px-2"
+          asChild
+          onClick={onNavigate}
+        >
           <Link href="/dashboard">Dashboard</Link>
         </Button>
 
-        <Button variant="ghost" className="justify-start px-2" asChild>
+        <Button
+          variant="ghost"
+          className="justify-start px-2"
+          asChild
+          onClick={onNavigate}
+        >
           <Link href="/inquiries">Inquiries</Link>
         </Button>
 
         {canAccessUserManagement && (
-          <Button variant="ghost" className="justify-start px-2" asChild>
+          <Button
+            variant="ghost"
+            className="justify-start px-2"
+            asChild
+            onClick={onNavigate}
+          >
             <Link href="/users">Users Management</Link>
           </Button>
         )}
