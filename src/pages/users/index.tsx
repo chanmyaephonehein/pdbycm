@@ -37,6 +37,7 @@ import {
 import { Label } from "@/components/ui/label";
 import countryList from "react-select-country-list";
 import { useRouter } from "next/navigation";
+import { config } from "@/config";
 
 export type User = {
   id: number;
@@ -116,7 +117,7 @@ const UserManagement: React.FC = () => {
     try {
       let query = searchTerm ? `?search=${encodeURIComponent(searchTerm)}` : "";
       const token = localStorage.getItem("token");
-      const response = await fetch(`http://localhost:3000/api/users${query}`, {
+      const response = await fetch(`${config.apiBaseUrl}/users${query}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -193,7 +194,7 @@ const UserManagement: React.FC = () => {
     setCreating(true);
 
     const token = localStorage.getItem("token");
-    const response = await fetch("http://localhost:3000/api/users", {
+    const response = await fetch(`${config.apiBaseUrl}/users`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

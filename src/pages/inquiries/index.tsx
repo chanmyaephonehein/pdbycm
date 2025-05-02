@@ -30,6 +30,7 @@ import {
   subHours,
 } from "date-fns";
 import { utcToZonedTime } from "date-fns-tz";
+import { config } from "@/config";
 
 const statusOptions = [
   { label: "PENDING", value: "PENDING" },
@@ -76,14 +77,11 @@ const Inquiries = () => {
         query = `?search=${encodeURIComponent(searchTerm)}`;
       }
 
-      const response = await fetch(
-        `http://localhost:3000/api/inquiries${query}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
+      const response = await fetch(`${config.apiBaseUrl}/inquiries${query}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
       const data = await response.json();
 
       if (!response.ok) {
@@ -103,7 +101,7 @@ const Inquiries = () => {
     );
 
     try {
-      const response = await fetch("http://localhost:3000/api/inquiries", {
+      const response = await fetch(`${config.apiBaseUrl}/inquiries`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

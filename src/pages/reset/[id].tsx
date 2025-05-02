@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
+import { config } from "@/config";
 
 const getPasswordStrength = (password: string): string => {
   if (password.length < 8) return "Poor";
@@ -50,7 +51,7 @@ const ResetPassword = () => {
   const ifExpire = async () => {
     if (!token) return;
     try {
-      const res = await fetch("http://localhost:3000/api/auth/expiry", {
+      const res = await fetch(`${config.apiBaseUrl}/auth/expiry`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token }),

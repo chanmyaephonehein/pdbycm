@@ -13,6 +13,7 @@ import PhoneInput, {
   getCountryCallingCode,
 } from "react-phone-number-input";
 import "react-phone-number-input/style.css";
+import { config } from "@/config";
 
 export default function Contact() {
   const [selectedCountry, setSelectedCountry] = useState<any>(null);
@@ -56,7 +57,7 @@ export default function Contact() {
     setSubmitting(true);
 
     try {
-      const response = await fetch(`http://localhost:3000/api/inquiries`, {
+      const response = await fetch(`${config.apiBaseUrl}/inquiries`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newInquiry),

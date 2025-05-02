@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Mail, ArrowLeft, Info } from "lucide-react";
+import { config } from "@/config";
 
 interface Inquiry {
   id: number;
@@ -50,7 +51,7 @@ const InquiryDetail = () => {
     setSending(true);
 
     try {
-      const res = await fetch("http://localhost:3000/api/send", {
+      const res = await fetch(`${config.apiBaseUrl}/send`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -81,7 +82,7 @@ const InquiryDetail = () => {
     const fetchInquiry = async (inquiryId: string) => {
       try {
         const res = await fetch(
-          `http://localhost:3000/api/inquiries?id=${inquiryId}`,
+          `${config.apiBaseUrl}/inquiries?id=${inquiryId}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -111,7 +112,7 @@ const InquiryDetail = () => {
     setStatus(newStatus);
 
     try {
-      const res = await fetch(`http://localhost:3000/api/inquiries`, {
+      const res = await fetch(`${config.apiBaseUrl}/inquiries`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

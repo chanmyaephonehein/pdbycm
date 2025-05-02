@@ -1,3 +1,4 @@
+import { config } from "@/config";
 import { generateToken, verifyToken } from "@/utils/jwtUtils";
 import { PrismaClient } from "@prisma/client";
 import crypto from "crypto";
@@ -172,7 +173,7 @@ export default async function handler(
     });
 
     // Send verification email
-    const verificationUrl = `http://localhost:3000/verify/${verificationToken}`;
+    const verificationUrl = `${config.apiBaseUrl}/verify/${verificationToken}`;
     const mailOptions = {
       to: email,
       from: process.env.EMAIL_USER,

@@ -13,6 +13,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { config } from "@/config";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -53,7 +54,7 @@ export default function LoginPage() {
     setIsLoggingIn(true);
 
     try {
-      const response = await fetch("/api/auth/login", {
+      const response = await fetch(`${config.apiBaseUrl}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -86,7 +87,7 @@ export default function LoginPage() {
     setIsSendingReset(true);
 
     try {
-      const response = await fetch("http://localhost:3000/api/auth/forgot", {
+      const response = await fetch(`${config.apiBaseUrl}/auth/forgot`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
@@ -112,7 +113,7 @@ export default function LoginPage() {
     setIsConfirming(true);
 
     try {
-      const response = await fetch(`http://localhost:3000/api/auth/twoFactor`, {
+      const response = await fetch(`${config.apiBaseUrl}/auth/twoFactor`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ dialogInput, email }),

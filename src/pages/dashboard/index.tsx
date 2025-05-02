@@ -10,6 +10,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
+import { config } from "@/config";
 
 const Dashboard = () => {
   const [totalInquiries, setTotalInquiries] = useState<number | null>(null);
@@ -28,7 +29,7 @@ const Dashboard = () => {
     const fetchUsers = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await fetch("http://localhost:3000/api/users", {
+        const res = await fetch(`${config.apiBaseUrl}/users`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!res.ok) throw new Error("Failed to fetch users");
@@ -55,12 +56,9 @@ const Dashboard = () => {
       try {
         const token = localStorage.getItem("token");
         const queryParam = filter === "all" ? "" : `?range=${filter}`;
-        const res = await fetch(
-          `http://localhost:3000/api/inquiries${queryParam}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+        const res = await fetch(`${config.apiBaseUrl}/inquiries${queryParam}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         if (!res.ok) throw new Error("Failed to fetch inquiries");
 
         const data = await res.json();

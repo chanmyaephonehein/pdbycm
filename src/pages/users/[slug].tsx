@@ -16,6 +16,7 @@ import {
 import Select from "react-select";
 import countryList from "react-select-country-list";
 import { ArrowLeft, User, Trash2, Pencil } from "lucide-react";
+import { config } from "@/config";
 
 type User = {
   id: number;
@@ -43,7 +44,7 @@ export default function UserDetailsPage() {
   const countryOptions = useMemo(() => countryList().getData(), []);
 
   const fetchEachUser = async () => {
-    const response = await fetch(`http://localhost:3000/api/users?id=${id}`, {
+    const response = await fetch(`${config.apiBaseUrl}/users?id=${id}`, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
@@ -78,7 +79,7 @@ export default function UserDetailsPage() {
     };
 
     try {
-      const response = await fetch(`http://localhost:3000/api/users`, {
+      const response = await fetch(`${config.apiBaseUrl}/users`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -113,7 +114,7 @@ export default function UserDetailsPage() {
 
   const handleDelete = async () => {
     try {
-      const response = await fetch(`http://localhost:3000/api/users?id=${id}`, {
+      const response = await fetch(`${config.apiBaseUrl}/users?id=${id}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,

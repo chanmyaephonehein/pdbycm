@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/router";
+import { config } from "@/config";
 
 const Verify = () => {
   const router = useRouter();
@@ -12,7 +13,7 @@ const Verify = () => {
   console.log(token);
   const handleVerification = async () => {
     try {
-      const response = await fetch("http://localhost:3000/api/auth/verify", {
+      const response = await fetch(`${config.apiBaseUrl}/auth/verify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id }),
@@ -35,7 +36,7 @@ const Verify = () => {
   const stillValidToken = async () => {
     if (!token) return;
     const response = await fetch(
-      "http://localhost:3000/api/auth/validRegisterToken",
+      `${config.apiBaseUrl}/auth/validRegisterToken`,
       {
         method: "POST",
         headers: {

@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import nodemailer from "nodemailer";
 import crypto from "crypto";
 import { PrismaClient } from "@prisma/client";
+import { config } from "@/config";
 
 const prisma = new PrismaClient();
 
@@ -39,7 +40,7 @@ export default async function handler(
   });
 
   // Create a password reset URL containing the reset token
-  const resetUrl = `http://localhost:3000/reset/${resetToken}`; // Adjust the URL to match the frontend route for password reset
+  const resetUrl = `${config.apiBaseUrl}/reset/${resetToken}`; // Adjust the URL to match the frontend route for password reset
   const mailOptions = {
     to: email, // Recipient of the reset email
     from: process.env.EMAIL_USER, // Sender's email (could be your service's email address)
