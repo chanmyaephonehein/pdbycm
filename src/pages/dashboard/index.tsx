@@ -112,7 +112,7 @@ const Dashboard = () => {
 
         <Card className="border-purple-500 shadow-md">
           <CardHeader className="text-purple-600">
-            <CardTitle>Admins</CardTitle>
+            <CardTitle>Adminsadsadasd</CardTitle>
           </CardHeader>
           <CardContent className="text-2xl font-semibold">
             {loadingInquiries ? <Skeleton className="h-6 w-16" /> : adminCount}
